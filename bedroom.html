@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8eee5">
+  <title>卧室 · 温暖的小屋</title>
+  <script src="room-shell-bridge.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Trebuchet MS", "Microsoft YaHei", "PingFang SC", ui-rounded, system-ui, sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --ink: #493d3b;
+      --muted: #917d78;
+      --cream: #fff8f1;
+      --rose: #d98279;
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      padding: 26px 22px 30px;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 12% 10%, #f3ddd1 0, transparent 27rem),
+        radial-gradient(ellipse at 92% 88%, #e7e5d9 0, transparent 25rem),
+        var(--cream);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+    a { color: inherit; }
+    .app { width: min(100%, 1050px); margin: 0 auto; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 38px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 800; text-decoration: none; }
+    .brand-mark { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid #ead7ca; border-radius: 14px; background: #fffdf9; box-shadow: 0 3px 0 #efdfd4; font-size: 21px; }
+    .room-nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px 15px; }
+    .room-nav a { color: #88736e; font-size: 13px; text-decoration: none; }
+    .room-nav a:hover { color: var(--rose); text-decoration: underline; text-underline-offset: 3px; }
+    .intro { margin-bottom: 22px; }
+    .eyebrow { margin: 0 0 6px; color: #b07e73; font-size: 12px; font-weight: 750; letter-spacing: .12em; }
+    h1 { margin: 0; font-size: clamp(32px, 5vw, 46px); letter-spacing: -.05em; line-height: 1.15; }
+    h1 span { color: var(--rose); }
+    .intro-copy { margin: 9px 0 12px; color: var(--muted); font-size: 14px; }
+    .presence { margin: 5px 0; color: #8d776f; font-size: 13px; }
+    .bedroom-scene {
+      position: relative;
+      min-height: 540px;
+      overflow: hidden;
+      isolation: isolate;
+      border: 1px solid #e6cfc0;
+      border-radius: 27px;
+      background: #f4e5dc url("bedroom-room.webp") center / cover no-repeat;
+      box-shadow: 0 17px 45px #73513b18;
+    }
+    .bedroom-scene::before,
+    .window,
+    .wall-art,
+    .nightstand,
+    .lamp,
+    .bed,
+    .rug { display: none; }
+    .window {
+      position: absolute;
+      top: 9%;
+      left: 8%;
+      width: 27%;
+      height: 43%;
+      overflow: hidden;
+      border: 9px solid #fff8ed;
+      border-radius: 8px;
+      background:
+        linear-gradient(90deg, transparent 47%, #fff8ed 47% 51%, transparent 51%),
+        linear-gradient(180deg, transparent 49%, #fff8ed 49% 53%, transparent 53%),
+        linear-gradient(155deg, #b9d6d2, #f6e8c5 65%, #aec1a2);
+      box-shadow: 0 4px 12px #795d4e25, inset 0 0 0 2px #d1b9a5;
+    }
+    .window::after {
+      position: absolute;
+      right: -16%;
+      bottom: -21%;
+      left: -12%;
+      height: 43%;
+      border-radius: 50% 50% 0 0;
+      background: #aab99a;
+      content: "";
+    }
+    .wall-art {
+      position: absolute;
+      top: 14%;
+      right: 18%;
+      display: grid;
+      width: 104px;
+      height: 130px;
+      place-items: center;
+      border: 8px solid #d2aa88;
+      outline: 1px solid #fff6e9;
+      color: #ba8975;
+      background: linear-gradient(155deg, #fff8e9, #edd7bf);
+      box-shadow: 0 5px 12px #7251391c;
+      font-size: 35px;
+    }
+    .bedroom-scene .wall-art { display: none; }
+    .nightstand {
+      position: absolute;
+      bottom: 21%;
+      left: 12%;
+      width: 14%;
+      height: 15%;
+      border: 2px solid #ba8e72;
+      border-radius: 7px 7px 3px 3px;
+      background: linear-gradient(90deg, #c99e7f, #dfb998 50%, #c49475);
+      box-shadow: 0 10px 14px #69442f20;
+    }
+    .nightstand::before {
+      position: absolute;
+      top: 28%;
+      left: 16%;
+      width: 68%;
+      height: 34%;
+      border: 2px solid #b58970;
+      border-radius: 4px;
+      background: #e6c2a2;
+      content: "";
+    }
+    .lamp {
+      position: absolute;
+      bottom: calc(36% + 38px);
+      left: 15%;
+      width: 54px;
+      height: 60px;
+      border-bottom: 4px solid #a88668;
+      background: linear-gradient(180deg, transparent 48%, #a88668 49% 55%, transparent 56%);
+    }
+    .lamp::before {
+      position: absolute;
+      top: 0;
+      left: 3px;
+      width: 48px;
+      height: 34px;
+      border-radius: 50% 50% 10px 10px;
+      background: #f6dfaa;
+      box-shadow: 0 0 29px #f6dca36b;
+      content: "";
+    }
+    .bed {
+      position: absolute;
+      right: 10%;
+      bottom: 8%;
+      left: 31%;
+      height: 39%;
+      border: 8px solid #a87461;
+      border-top-width: 20px;
+      border-radius: 22px 22px 10px 10px;
+      background: linear-gradient(180deg, #fff8ef 0 26%, #d99791 27% 100%);
+      box-shadow: 0 13px 20px #6c45331e;
+    }
+    .bed::before {
+      position: absolute;
+      top: -32px;
+      right: -8px;
+      left: -8px;
+      height: 40px;
+      border: 7px solid #aa7964;
+      border-bottom: 0;
+      border-radius: 19px 19px 0 0;
+      background: linear-gradient(90deg, #d8b39d, #eed3bd, #d5aa92);
+      content: "";
+    }
+    .bed-pillow {
+      position: absolute;
+      z-index: 1;
+      top: 7%;
+      left: 13%;
+      width: 28%;
+      height: 29%;
+      border-radius: 12px 12px 16px 16px;
+      background: #fff2dc;
+      box-shadow: inset 0 -4px 7px #b0846220;
+      transform: rotate(-5deg);
+    }
+    .bed-pillow.second { left: auto; right: 13%; transform: rotate(5deg); }
+    .rug {
+      position: absolute;
+      right: 15%;
+      bottom: 3%;
+      left: 24%;
+      z-index: -1;
+      height: 16%;
+      border-radius: 50%;
+      background: #f5e6d2;
+      box-shadow: inset 0 0 0 3px #fff8ed80;
+    }
+    .bedroom-dandan {
+      position: absolute;
+      z-index: 3;
+      right: 2%;
+      bottom: 2%;
+      width: min(40%, 340px);
+      margin: 0;
+      filter: drop-shadow(0 5px 8px #57382924);
+      text-align: center;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transform: translate(var(--drag-x, 0px), var(--drag-y, 0px));
+    }
+    .bedroom-dandan.is-dragging { z-index: 6; cursor: grabbing; }
+    .bedroom-dandan[hidden] { display: none !important; }
+    .bedroom-dandan > img:not(.is-hidden) { display: block; width: 100%; height: auto; transform: scale(1.25); transform-origin: 100% 100%; }
+    .bedroom-dandan .is-hidden { display: none !important; }
+    .bedroom-xiaoyi {
+      position: absolute;
+      z-index: 2;
+      bottom: 2%;
+      left: 2%;
+      width: min(29%, 240px);
+      margin: 0;
+      filter: drop-shadow(0 5px 8px #57382924);
+      cursor: pointer;
+      touch-action: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bedroom-xiaoyi[hidden] { display: none !important; }
+    .bedroom-xiaoyi img { display: block; width: 100%; height: auto; }
+    .bedroom-xiaoyi:focus-visible { border-radius: 18px; outline: 3px solid #d98279; outline-offset: 4px; }
+    .bedroom-cat {
+      position: absolute;
+      z-index: 4;
+      right: 17%;
+      bottom: 14%;
+      width: min(22%, 190px);
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      filter: drop-shadow(0 6px 6px #553a2c25);
+    }
+    .bedroom-cat[hidden] { display: none !important; }
+    .bedroom-cat img { display: block; width: 100%; height: auto; }
+    .bedroom-cat:focus-visible { border-radius: 20px; outline: 3px solid #d98279; outline-offset: 4px; }
+    .bedroom-together {
+      position: absolute;
+      z-index: 5;
+      bottom: 7%;
+      left: 50%;
+      width: min(38%, 330px);
+      margin: 0;
+      filter: drop-shadow(0 7px 9px #5136292e);
+      transform: translateX(-50%);
+    }
+    .bedroom-together[hidden] { display: none !important; }
+    .bedroom-together img { display: block; width: 100%; height: auto; }
+    .bedroom-conversation {
+      position: absolute;
+      z-index: 8;
+      top: 7%;
+      left: 50%;
+      width: max-content;
+      max-width: min(86%, 420px);
+      padding: 10px 15px;
+      transform: translateX(-50%);
+      border: 1px solid #edcdb7;
+      border-radius: 16px;
+      color: #71554b;
+      background: #fffaf1ed;
+      box-shadow: 0 5px 18px #57382924;
+      font-size: 13px;
+      font-weight: 650;
+      line-height: 1.5;
+      text-align: center;
+    }
+    .bedroom-conversation[hidden] { display: none !important; }
+    .bedroom-music {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: center;
+      gap: 16px;
+      margin-top: 16px;
+      padding: 16px 18px;
+      border: 1px solid #ead7ca;
+      border-radius: 18px;
+      background: #fffaf5e8;
+      box-shadow: 0 7px 22px #73513b10;
+    }
+    .bedroom-music-copy { min-width: 0; }
+    .bedroom-music h2 { margin: 0; font-size: 15px; }
+    .bedroom-music p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+    .bedroom-music-controls { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 10px; }
+    .bedroom-music-progress { display: flex; align-items: center; gap: 12px; }
+    .bedroom-music-progress input {
+      width: 100%;
+      min-width: 0;
+      height: 6px;
+      accent-color: var(--rose);
+      cursor: pointer;
+    }
+    .bedroom-music-progress input:disabled { cursor: default; }
+    .bedroom-music-time { min-width: 82px; color: #806a63; font-size: 11px; font-variant-numeric: tabular-nums; text-align: right; }
+    .bedroom-music-toggle {
+      min-width: 88px;
+      min-height: 38px;
+      padding: 8px 14px;
+      border: 1px solid #d8b8a4;
+      border-radius: 999px;
+      color: #71554b;
+      background: #fff;
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .bedroom-music-toggle:hover:not(:disabled) { background: #fff3e8; }
+    .bedroom-music-toggle:disabled { cursor: default; opacity: .55; }
+    .bedroom-music-volume { display: flex; align-items: center; gap: 6px; color: #806a63; font-size: 12px; }
+    .bedroom-music-volume input { width: 76px; accent-color: var(--rose); }
+    .bedroom-music-library { display: flex; align-items: center; gap: 8px; }
+    .bedroom-music-library select {
+      max-width: 210px;
+      min-height: 38px;
+      padding: 7px 10px;
+      border: 1px solid #d8b8a4;
+      border-radius: 10px;
+      color: #71554b;
+      background: #fff;
+      font: inherit;
+      font-size: 12px;
+    }
+    .bedroom-music-library select:disabled { display: none; }
+    .bedroom-music-library button {
+      min-height: 38px;
+      padding: 7px 10px;
+      border: 1px solid #d8b8a4;
+      border-radius: 999px;
+      color: #71554b;
+      background: #fff;
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+    }
+    .bedroom-music-library button:disabled { display: none; }
+    .music-file-label {
+      display: inline-flex;
+      min-height: 38px;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 13px;
+      border: 1px solid #d8b8a4;
+      border-radius: 999px;
+      color: #71554b;
+      background: #fff;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .music-file-label:hover { background: #fff3e8; }
+    .music-file-label:focus-within { outline: 2px solid var(--rose); outline-offset: 3px; }
+    .music-file-input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .bedroom-music audio { flex: 1 0 100%; width: 100%; height: 38px; }
+    .bedroom-music audio[hidden] { display: none; }
+    .bedroom-dandan.is-interacting > img:not(.is-hidden),
+    .bedroom-xiaoyi.is-interacting img,
+    .bedroom-together.is-interacting img {
+      animation: bedroom-character-glow 1s ease-in-out infinite alternate;
+    }
+    @keyframes bedroom-character-glow {
+      to { filter: drop-shadow(0 0 12px #f1ae74b8); }
+    }
+    .hint {
+      margin: 13px 4px 0;
+      color: #927f77;
+      font-size: 12px;
+      text-align: center;
+    }
+    .footer { margin-top: 23px; color: #a08c80; font-size: 11px; text-align: center; }
+    @media (max-width: 650px) {
+      body { padding: 18px 14px 24px; }
+      .topbar { align-items: flex-start; margin-bottom: 28px; }
+      .room-nav { gap: 8px 10px; }
+      .bedroom-scene { min-height: 430px; }
+      .window { width: 34%; height: 38%; }
+      .wall-art { top: 11%; right: 10%; width: 67px; height: 90px; border-width: 6px; font-size: 25px; }
+      .nightstand { left: 7%; width: 19%; }
+      .lamp { left: 11%; transform: scale(.78); transform-origin: bottom left; }
+      .bed { right: 5%; left: 25%; height: 36%; }
+      .bedroom-dandan { right: 2%; left: auto; width: 48%; }
+      .bedroom-xiaoyi { width: 34%; }
+      .bedroom-cat { right: 8%; width: 25%; }
+      .bedroom-together { width: min(52%, 280px); }
+      .bedroom-music { gap: 12px; padding: 14px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body data-flower-room="bedroom" data-xiaoyi-room="bedroom" data-dandan-room="bedroom">
+  <main class="app">
+    <header class="topbar">
+      <a class="brand" href="bedroom.html"><span class="brand-mark" aria-hidden="true">🛏️</span> 温暖的小屋 · 卧室</a>
+      <nav class="room-nav" aria-label="切换房间">
+        <a href="cloud-notes.html">客厅</a>
+        <a href="cat.html">花花的小窝</a>
+        <a href="esports-room.html">电竞房</a>
+      </nav>
+    </header>
+
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">REST · RELAX · RECHARGE</p>
+      <h1 id="page-title">回到温暖的<span>卧室</span></h1>
+      <p class="intro-copy">柔软的床铺、暖暖的灯光，给忙碌的一天留一点安静时光。</p>
+      <p class="presence" data-flower-status role="status" aria-live="polite">正在确认花花的位置……</p>
+      <p class="presence" data-xiaoyi-status role="status" aria-live="polite">正在确认小易的位置……</p>
+      <p class="presence" data-dandan-status role="status" aria-live="polite">正在确认蛋蛋的位置……</p>
+    </section>
+
+    <section class="bedroom-scene" aria-label="温馨卧室，有窗户、床铺和柔和灯光">
+      <div class="window" aria-hidden="true"></div>
+      <div class="wall-art" aria-hidden="true">☾</div>
+      <div class="nightstand" aria-hidden="true"></div>
+      <div class="lamp" aria-hidden="true"></div>
+      <div class="rug" aria-hidden="true"></div>
+      <div class="bed" aria-hidden="true">
+        <span class="bed-pillow"></span>
+        <span class="bed-pillow second"></span>
+      </div>
+      <figure class="bedroom-xiaoyi" data-xiaoyi-character hidden>
+        <img src="xiaoyi-cutout.webp?v=1" alt="在卧室休息的小易" draggable="false">
+      </figure>
+      <figure class="bedroom-dandan" data-dandan-character title="单击切换服饰造型，可拖动调整位置" hidden>
+        <img data-dandan-default-art src="dandan-bedroom-qipao.webp" alt="穿中式礼服的蛋蛋" draggable="false">
+        <img class="is-hidden" data-dandan-together-art src="dandan-huahua-floral.webp?v=1" alt="穿白色刺绣中式礼服的蛋蛋抱着花花，在卧室休息" draggable="false">
+      </figure>
+      <button class="bedroom-cat" data-flower type="button" aria-label="摸摸来卧室休息的花花" hidden>
+        <img src="huahua.webp" alt="花花，一只奶油白、橘色和深棕色相间的长毛三花猫" draggable="false">
+      </button>
+      <figure class="bedroom-together" data-dandan-huahua-bedroom data-flower-picker-trigger hidden>
+        <img src="dandan-huahua-floral.webp?v=1" alt="穿白色刺绣中式礼服的蛋蛋抱着花花，一起在卧室休息" draggable="false">
+      </figure>
+      <div class="bedroom-conversation" data-bedroom-conversation role="status" aria-live="polite" hidden></div>
+    </section>
+    <section class="bedroom-music" aria-labelledby="bedroom-music-title">
+      <div class="bedroom-music-copy">
+        <h2 id="bedroom-music-title">♫ 卧室音乐</h2>
+        <p data-music-status role="status" aria-live="polite">选择设备中的音乐，在卧室播放。</p>
+      </div>
+      <div class="bedroom-music-controls">
+        <div class="bedroom-music-library">
+          <select data-music-library aria-label="卧室已保存的音乐" disabled>
+            <option value="">音乐库暂无歌曲</option>
+          </select>
+          <button type="button" data-music-remove disabled>删除</button>
+        </div>
+        <label class="music-file-label">
+          选择音乐
+          <input class="music-file-input" data-music-file type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.flac">
+        </label>
+        <button class="bedroom-music-toggle" data-music-toggle type="button" disabled aria-label="播放音乐">播放</button>
+        <label class="bedroom-music-volume" aria-label="音乐音量">
+          音量
+          <input data-music-volume type="range" min="0" max="1" value="1" step="0.05" aria-label="音乐音量" disabled>
+        </label>
+        <audio data-bedroom-audio preload="none" hidden aria-label="卧室音乐播放器"></audio>
+      </div>
+      <div class="bedroom-music-progress">
+        <span class="bedroom-music-time" data-music-current-time>00:00</span>
+        <input data-music-progress type="range" min="0" max="1000" value="0" step="1" aria-label="音乐播放进度" disabled>
+        <span class="bedroom-music-time" data-music-duration>00:00</span>
+      </div>
+    </section>
+    <p class="hint">花花会每8分钟随机换个房间，蛋蛋和小易也会来串门。双击角色可以选择房间。</p>
+    <footer class="footer">愿每个夜晚都能好好休息 ♡</footer>
+  </main>
+  <script>
+    (() => {
+      const character = document.querySelector("[data-dandan-character]");
+      const scene = document.querySelector(".bedroom-scene");
+      if (!character || !scene) return;
+
+      const appearanceStorageKey = "dan-zong-house-dandan-appearance";
+      let drag;
+      let appearanceClickTimer;
+      const defaultArt = character.querySelector("[data-dandan-default-art]");
+      const appearances = [
+        {
+          src: "1.webp",
+          alt: "穿白色蕾丝婚纱的蛋蛋",
+          pairSrc: "2.webp",
+          pairAlt: "穿白色蕾丝婚纱的蛋蛋抱着花花"
+        },
+        {
+          src: "4.webp",
+          alt: "穿白色礼服的蛋蛋",
+          pairSrc: "5.webp",
+          pairAlt: "穿白色礼服的蛋蛋抱着花花"
+        },
+        {
+          src: "7.webp",
+          alt: "穿黄色格纹吊带裙的蛋蛋",
+          pairSrc: "8.webp",
+          pairAlt: "穿黄色格纹裙的蛋蛋抱着花花"
+        }
+      ];
+      let savedAppearance = localStorage.getItem(appearanceStorageKey);
+      const legacyAppearances = {
+        "2.webp": "1.webp",
+        "3.webp": "1.webp",
+        "5.webp": "4.webp",
+        "6.webp": "4.webp",
+        "8.webp": "7.webp",
+        "9.webp": "7.webp",
+        "dandan-bedroom-wedding-floral.webp?v=1": "1.webp",
+        "dandan-bedroom-wedding-huahua.webp?v=1": "1.webp",
+        "dandan-bedroom-wedding-sad.webp?v=1": "1.webp",
+        "dandan-bedroom-qipao-floral.webp?v=1": "4.webp",
+        "dandan-bedroom-qipao-sad.webp?v=1": "4.webp",
+        "dandan-bedroom-summer.webp": "7.webp",
+        "dandan-bedroom-summer-huahua.webp?v=1": "7.webp",
+        "dandan-bedroom-summer-angry.webp?v=1": "7.webp"
+      };
+      const originalAppearance = savedAppearance;
+      savedAppearance = legacyAppearances[savedAppearance] || savedAppearance;
+      let appearanceIndex = appearances.findIndex(({ src }) => src === savedAppearance);
+      if (appearanceIndex < 0) {
+        appearanceIndex = 0;
+        savedAppearance = appearances[appearanceIndex].src;
+        localStorage.setItem(appearanceStorageKey, savedAppearance);
+      } else if (originalAppearance !== savedAppearance) {
+        localStorage.setItem(appearanceStorageKey, savedAppearance);
+      }
+
+      function applyAppearance() {
+        const appearance = appearances[appearanceIndex];
+        defaultArt.setAttribute("src", appearance.src);
+        defaultArt.alt = appearance.alt;
+      }
+
+      applyAppearance();
+
+      function toggleAppearance() {
+        appearanceIndex = (appearanceIndex + 1) % appearances.length;
+        applyAppearance();
+        localStorage.setItem(appearanceStorageKey, appearances[appearanceIndex].src);
+        window.dispatchEvent(new CustomEvent("dandan-appearance-change"));
+      }
+
+      window.addEventListener("storage", (event) => {
+        if (event.key !== appearanceStorageKey) return;
+        appearanceIndex = appearances.findIndex(({ src }) => src === event.newValue);
+        if (appearanceIndex < 0) appearanceIndex = 0;
+        applyAppearance();
+      });
+
+      character.addEventListener("pointerdown", (event) => {
+        if (!event.isPrimary || event.button !== 0) return;
+        const bounds = character.getBoundingClientRect();
+        const offset = {
+          x: Number.parseFloat(character.style.getPropertyValue("--drag-x")) || 0,
+          y: Number.parseFloat(character.style.getPropertyValue("--drag-y")) || 0
+        };
+        drag = {
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          offset,
+          baseLeft: bounds.left - offset.x,
+          baseTop: bounds.top - offset.y,
+          width: bounds.width,
+          height: bounds.height,
+          moved: false
+        };
+        event.preventDefault();
+      });
+
+      window.addEventListener("pointermove", (event) => {
+        if (!drag || event.pointerId !== drag.pointerId) return;
+        const bounds = scene.getBoundingClientRect();
+        const x = Math.max(
+          bounds.left + 6 - drag.baseLeft,
+          Math.min(
+            drag.offset.x + event.clientX - drag.startX,
+            bounds.right - 6 - drag.width - drag.baseLeft
+          )
+        );
+        const y = Math.max(
+          bounds.top + 6 - drag.baseTop,
+          Math.min(
+            drag.offset.y + event.clientY - drag.startY,
+            bounds.bottom - 6 - drag.height - drag.baseTop
+          )
+        );
+        if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 4) {
+          drag.moved = true;
+          character.classList.add("is-dragging");
+        }
+        character.style.setProperty("--drag-x", `${x}px`);
+        character.style.setProperty("--drag-y", `${y}px`);
+      });
+
+      function finishDrag(event) {
+        if (!drag || event.pointerId !== drag.pointerId) return;
+        character.classList.remove("is-dragging");
+        if (drag.moved) {
+          character.dataset.draggedClick = "true";
+          window.setTimeout(() => delete character.dataset.draggedClick, 500);
+        }
+        drag = null;
+      }
+
+      document.addEventListener("click", (event) => {
+        if (event.target !== character && !character.contains(event.target)) return;
+        if (!character.dataset.draggedClick) return;
+        delete character.dataset.draggedClick;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }, true);
+
+      window.addEventListener("pointerup", finishDrag);
+      window.addEventListener("pointercancel", finishDrag);
+
+      character.addEventListener("click", (event) => {
+        if (event.detail > 1) {
+          window.clearTimeout(appearanceClickTimer);
+          appearanceClickTimer = undefined;
+          return;
+        }
+        window.clearTimeout(appearanceClickTimer);
+        appearanceClickTimer = window.setTimeout(toggleAppearance, 280);
+      });
+      character.addEventListener("dblclick", () => {
+        window.clearTimeout(appearanceClickTimer);
+        appearanceClickTimer = undefined;
+      });
+    })();
+  </script>
+  <script src="flower-room.js"></script>
+  <script src="xiaoyi-room.js"></script>
+  <script src="dandan-room.js"></script>
+  <script src="flower-room-picker.js"></script>
+  <script>
+    (() => {
+      const picker = document.querySelector("[data-music-file]");
+      const player = document.querySelector("[data-bedroom-audio]");
+      const status = document.querySelector("[data-music-status]");
+      const library = document.querySelector("[data-music-library]");
+      const removeButton = document.querySelector("[data-music-remove]");
+      const progress = document.querySelector("[data-music-progress]");
+      const currentTimeLabel = document.querySelector("[data-music-current-time]");
+      const durationLabel = document.querySelector("[data-music-duration]");
+      const toggleButton = document.querySelector("[data-music-toggle]");
+      const volumeControl = document.querySelector("[data-music-volume]");
+      if (!picker || !player || !status || !library || !removeButton ||
+        !progress || !currentTimeLabel || !durationLabel || !toggleButton || !volumeControl) return;
+
+      let currentUrl;
+      let currentTrackId = null;
+      let currentTrackName = "";
+      const requestPromise = (request) => new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error || new Error("音乐数据库请求失败。"));
+      });
+      const databaseRequest = indexedDB.open("dan-zong-bedroom-music", 1);
+
+      databaseRequest.onupgradeneeded = () => {
+        const database = databaseRequest.result;
+        if (!database.objectStoreNames.contains("tracks")) {
+          database.createObjectStore("tracks", { keyPath: "id", autoIncrement: true });
+        }
+      };
+      databaseRequest.onerror = () => {
+        status.textContent = "无法打开卧室音乐库，请检查浏览器的本地存储权限。";
+      };
+
+      function getStore(mode) {
+        const database = databaseRequest.result;
+        return database.transaction("tracks", mode).objectStore("tracks");
+      }
+
+      function revokeCurrentUrl() {
+        if (!currentUrl) return;
+        URL.revokeObjectURL(currentUrl);
+        currentUrl = null;
+      }
+
+      function formatTime(seconds) {
+        if (!Number.isFinite(seconds) || seconds < 0) return "00:00";
+        const totalSeconds = Math.floor(seconds);
+        const minutes = Math.floor(totalSeconds / 60);
+        const remainingSeconds = totalSeconds % 60;
+        return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+      }
+
+      function updateProgress() {
+        const duration = player.duration;
+        const hasDuration = Number.isFinite(duration) && duration > 0;
+        progress.disabled = !hasDuration;
+        currentTimeLabel.textContent = formatTime(player.currentTime);
+        durationLabel.textContent = formatTime(duration);
+        if (hasDuration && document.activeElement !== progress) {
+          progress.value = String(Math.round((player.currentTime / duration) * Number(progress.max)));
+        }
+      }
+
+      function playSavedTrack(track) {
+        revokeCurrentUrl();
+        currentTrackId = track.id;
+        currentTrackName = track.name;
+        currentUrl = URL.createObjectURL(track.blob);
+        player.src = currentUrl;
+        player.muted = false;
+        player.hidden = false;
+        toggleButton.disabled = false;
+        volumeControl.disabled = false;
+        player.load();
+        updateProgress();
+        status.textContent = `已载入：${track.name}。点击播放器上的播放按钮开始播放。`;
+      }
+
+      async function refreshLibrary(selectId) {
+        const tracks = await requestPromise(getStore("readonly").getAll());
+        library.replaceChildren();
+        if (tracks.length === 0) {
+          const emptyOption = document.createElement("option");
+          emptyOption.value = "";
+          emptyOption.textContent = "音乐库暂无歌曲";
+          library.append(emptyOption);
+          library.disabled = true;
+          removeButton.disabled = true;
+          return;
+        }
+
+        for (const track of tracks) {
+          const option = document.createElement("option");
+          option.value = String(track.id);
+          option.textContent = track.name;
+          library.append(option);
+        }
+        library.disabled = false;
+        removeButton.disabled = false;
+        const selectedId = tracks.some(({ id }) => id === selectId)
+          ? selectId
+          : tracks[0].id;
+        library.value = String(selectedId);
+        const selectedTrack = tracks.find(({ id }) => id === selectedId);
+        if (selectedTrack) playSavedTrack(selectedTrack);
+      }
+
+      databaseRequest.onsuccess = () => {
+        refreshLibrary().catch((error) => {
+          status.textContent = "无法读取卧室音乐库，请检查浏览器的本地存储权限。";
+          console.error("Unable to read bedroom music library:", error);
+        });
+      };
+
+      picker.addEventListener("change", async () => {
+        const file = picker.files?.[0];
+        if (!file) return;
+        if (!file.type.startsWith("audio/") &&
+          !/\.(mp3|wav|ogg|m4a|aac|flac)$/i.test(file.name)) {
+          status.textContent = "无法识别此音频文件，请选择 MP3、WAV、OGG、M4A、AAC 或 FLAC。";
+          picker.value = "";
+          return;
+        }
+
+        try {
+          const id = await requestPromise(getStore("readwrite").add({
+            name: file.name,
+            type: file.type,
+            lastModified: file.lastModified,
+            blob: file
+          }));
+          await refreshLibrary(id);
+          status.textContent = `已保存到卧室音乐：${file.name}。点击播放器上的播放按钮开始播放。`;
+        } catch (error) {
+          status.textContent = "音乐没有保存成功，请检查浏览器的本地存储空间或权限。";
+          console.error("Unable to save bedroom music:", error);
+        } finally {
+          picker.value = "";
+        }
+      });
+
+      player.addEventListener("error", () => {
+        status.textContent = "无法播放此音频文件，请尝试其他格式的音乐。";
+      });
+      for (const eventName of ["loadedmetadata", "durationchange", "timeupdate", "seeked"]) {
+        player.addEventListener(eventName, updateProgress);
+      }
+      progress.addEventListener("input", () => {
+        if (!Number.isFinite(player.duration) || player.duration <= 0) return;
+        player.currentTime = (Number(progress.value) / Number(progress.max)) * player.duration;
+        currentTimeLabel.textContent = formatTime(player.currentTime);
+      });
+      player.addEventListener("play", () => {
+        toggleButton.textContent = "暂停";
+        toggleButton.setAttribute("aria-label", "暂停音乐");
+        status.textContent = `正在播放：${currentTrackName || "卧室音乐"}`;
+      });
+      player.addEventListener("pause", () => {
+        toggleButton.textContent = "播放";
+        toggleButton.setAttribute("aria-label", "播放音乐");
+        if (!player.ended && currentTrackName) {
+          status.textContent = `已暂停：${currentTrackName}`;
+        }
+      });
+      toggleButton.addEventListener("click", async () => {
+        if (!player.paused) {
+          player.pause();
+          return;
+        }
+        try {
+          player.muted = false;
+          await player.play();
+        } catch (error) {
+          status.textContent = "播放失败，请确认音频格式受支持并检查设备音量。";
+          console.error("Unable to play bedroom music:", error);
+        }
+      });
+      volumeControl.addEventListener("input", () => {
+        player.volume = Number(volumeControl.value);
+        player.muted = player.volume === 0;
+      });
+      library.addEventListener("change", async () => {
+        if (!library.value) return;
+        try {
+          const track = await requestPromise(getStore("readonly").get(Number(library.value)));
+          if (track) playSavedTrack(track);
+        } catch (error) {
+          status.textContent = "无法载入所选音乐，请稍后重试。";
+          console.error("Unable to load selected bedroom music:", error);
+        }
+      });
+      removeButton.addEventListener("click", async () => {
+        const id = Number(library.value);
+        if (!Number.isInteger(id)) return;
+        try {
+          await requestPromise(getStore("readwrite").delete(id));
+          if (id === currentTrackId) {
+            player.pause();
+            player.removeAttribute("src");
+            player.load();
+            player.hidden = true;
+            toggleButton.disabled = true;
+            volumeControl.disabled = true;
+            toggleButton.textContent = "播放";
+            toggleButton.setAttribute("aria-label", "播放音乐");
+            progress.value = "0";
+            progress.disabled = true;
+            currentTimeLabel.textContent = "00:00";
+            durationLabel.textContent = "00:00";
+            currentTrackId = null;
+            currentTrackName = "";
+            revokeCurrentUrl();
+          }
+          await refreshLibrary();
+          if (library.disabled) {
+            status.textContent = "音乐已从卧室音乐库删除。";
+          }
+        } catch (error) {
+          status.textContent = "无法删除这首音乐，请稍后重试。";
+          console.error("Unable to delete bedroom music:", error);
+        }
+      });
+      window.addEventListener("pagehide", () => {
+        revokeCurrentUrl();
+        databaseRequest.result?.close();
+      }, { once: true });
+    })();
+  </script>
+  <script>
+    (() => {
+      const scene = document.querySelector(".bedroom-scene");
+      const conversation = document.querySelector("[data-bedroom-conversation]");
+      const dandan = document.querySelector("[data-dandan-character]");
+      const xiaoyi = document.querySelector("[data-xiaoyi-character]");
+      const dandanAndHuahua = document.querySelector("[data-dandan-huahua-bedroom]");
+      const dandanStatus = document.querySelector("[data-dandan-status]");
+      const xiaoyiStatus = document.querySelector("[data-xiaoyi-status]");
+      if (!scene || !conversation || !dandan || !xiaoyi) return;
+
+      const lines = [
+        "蛋蛋：小易，你觉得我今天这样好看吗？",
+        "小易：好看！你今天特别可爱。",
+        "蛋蛋：嘻嘻，谢谢夸奖！陪我聊一会儿吧。"
+      ];
+      let dandanIsHere = dandanStatus?.textContent.includes("这个房间") ?? false;
+      let xiaoyiIsHere = xiaoyiStatus?.textContent.includes("这个房间") ?? false;
+      let active = false;
+      let timer;
+      let lineIndex = 0;
+
+      function stopInteraction() {
+        window.clearTimeout(timer);
+        active = false;
+        lineIndex = 0;
+        conversation.hidden = true;
+        dandan.classList.remove("is-interacting");
+        xiaoyi.classList.remove("is-interacting");
+        dandanAndHuahua?.classList.remove("is-interacting");
+      }
+
+      function showNextLine() {
+        if (lineIndex >= lines.length) {
+          stopInteraction();
+          return;
+        }
+        conversation.textContent = lines[lineIndex++];
+        timer = window.setTimeout(showNextLine, 2800);
+      }
+
+      function syncInteraction() {
+        if (!dandanIsHere || !xiaoyiIsHere) {
+          if (active) stopInteraction();
+          return;
+        }
+        if (active) return;
+        active = true;
+        dandan.classList.add("is-interacting");
+        xiaoyi.classList.add("is-interacting");
+        dandanAndHuahua?.classList.add("is-interacting");
+        conversation.hidden = false;
+        showNextLine();
+      }
+
+      window.addEventListener("dandan-room-change", (event) => {
+        dandanIsHere = event.detail.room === "bedroom" && event.detail.isHere;
+        syncInteraction();
+      });
+      window.addEventListener("xiaoyi-room-change", (event) => {
+        xiaoyiIsHere = event.detail.room === "bedroom";
+        syncInteraction();
+      });
+      syncInteraction();
+    })();
+  </script>
+</body>
+</html>

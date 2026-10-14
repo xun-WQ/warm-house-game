@@ -1,0 +1,1306 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>客厅 · 和蛋蛋聊天</title>
+  <script src="room-shell-bridge.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Trebuchet MS", "Microsoft YaHei", "PingFang SC", ui-rounded, system-ui, sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --ink: #292929;
+      --muted: #6f6d6c;
+      --plum: #f15b35;
+      --plum-deep: #ce4727;
+      --rose: #f15b35;
+      --paper: #ffffff;
+      --line: #d1cfca;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 30px 20px 26px;
+      color: var(--ink);
+      background: #ffffff;
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+
+    .app { width: min(100%, 1000px); margin: 0 auto; }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 750;
+      letter-spacing: .04em;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      border: 1.5px solid #55514d;
+      border-radius: 13px;
+      color: #f15b35;
+      background: #f5f3ee;
+      box-shadow: 2px 2px 0 #888580;
+      font-size: 20px;
+    }
+
+    .online {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border: 1px solid #77736f;
+      border-radius: 999px;
+      color: #464441;
+      background: rgba(248, 247, 243, .88);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .online-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f15b35;
+      box-shadow: 0 0 0 3px rgba(241, 91, 53, .18);
+    }
+
+    .intro { margin-bottom: 20px; }
+
+    h1 {
+      margin: 0;
+      color: #252525;
+      font-size: clamp(29px, 5vw, 38px);
+      font-weight: 760;
+      letter-spacing: -.045em;
+      line-height: 1.2;
+    }
+
+    .intro h1 span { color: #f15b35; }
+
+    .intro p {
+      margin: 7px 0 0;
+      color: #7e7881;
+      font-size: 14px;
+    }
+
+    .intro .flower-presence { color: #5e7b62; font-size: 13px; font-weight: 650; }
+
+    .cat-page-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 12px;
+      padding: 8px 13px;
+      border: 1px solid #efc7b8;
+      border-radius: 999px;
+      color: #a34e38;
+      background: #fff8f3;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background .15s ease, transform .15s ease;
+    }
+
+    .cat-page-link:hover { transform: translateY(-1px); background: #fff0e8; }
+    .cat-page-link:focus-visible { outline: 2px solid #e85a36; outline-offset: 3px; }
+
+    .experience-grid {
+      display: grid;
+      grid-template-columns: minmax(0, .94fr) minmax(0, 1.06fr);
+      align-items: stretch;
+      gap: 17px;
+    }
+
+    .scene-card, .chat-card {
+      overflow: hidden;
+      min-width: 0;
+      border: 1.5px solid #625f5c;
+      border-radius: 10px;
+      background: var(--paper);
+      box-shadow: 4px 4px 0 rgba(56, 54, 52, .23);
+    }
+
+    .scene-card {
+      position: relative;
+      display: flex;
+      min-height: 740px;
+      flex-direction: column;
+      justify-content: flex-end;
+      isolation: isolate;
+      background: #f6e6cf url("dan-zong-room.webp") center / cover no-repeat;
+    }
+
+    .scene-art {
+      display: none;
+      position: absolute;
+      z-index: -2;
+      inset: 0;
+      width: min(82%, 440px);
+      height: 100%;
+      opacity: 1;
+    }
+
+    .scene-wash {
+      display: none;
+      position: absolute;
+      z-index: -1;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255, 250, 237, .18) 0%, rgba(237, 245, 235, .04) 46%, rgba(39, 80, 77, .2) 100%);
+      pointer-events: none;
+    }
+
+    .scene-flowers {
+      display: none;
+      position: absolute;
+      z-index: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 160px;
+      pointer-events: none;
+    }
+
+    .scene-caption {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: grid;
+      gap: 2px;
+      padding: 6px 9px;
+      border: 1px solid rgba(83, 105, 88, .28);
+      border-radius: 7px;
+      color: #343332;
+      background: #ffffff;
+    }
+
+    .scene-caption strong { font-size: 13px; letter-spacing: .12em; }
+    .scene-caption span { color: #585654; font-size: 11px; }
+
+    .speech {
+      position: absolute;
+      z-index: 3;
+      display: none;
+      top: 0;
+      left: 50%;
+      width: max-content;
+      max-width: min(75vw, 300px);
+      padding: 10px 13px;
+      transform: translate(-50%, calc(-100% - 12px));
+      border: 1.5px solid #343230;
+      border-radius: 6px;
+      color: #302f2d;
+      background: #f7f6f2;
+      box-shadow: 3px 3px 0 rgba(38, 38, 38, .2);
+      font-size: 13px;
+      text-align: center;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+
+    .speech.is-active { display: block; }
+
+    .speech::after {
+      position: absolute;
+      left: 50%;
+      bottom: -8px;
+      width: 13px;
+      height: 13px;
+      border-right: 1.5px solid #343230;
+      border-bottom: 1.5px solid #343230;
+      background: #f7f6f2;
+      content: "";
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    .speech.speaker-huahua {
+      border-color: #8b644e;
+      border-radius: 18px;
+      background: #fff9f0;
+      color: #583e35;
+    }
+    .speech.speaker-huahua::after {
+      border-color: #8b644e;
+      border-bottom-right-radius: 3px;
+      background: #fff9f0;
+    }
+
+    .speech.pop { animation: bubble-pop .36s ease; }
+
+    @keyframes bubble-pop {
+      45% { transform: translate(-50%, calc(-100% - 17px)) scale(1.035); }
+    }
+
+    .character-pair {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      width: 100%;
+      align-items: flex-end;
+      justify-content: center;
+      margin: 0 auto;
+    }
+
+    .character-button {
+      position: relative;
+      display: block;
+      flex: 0 1 68%;
+      width: 68%;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    [data-flower][hidden],
+    [data-xiaoyi-character][hidden],
+    [data-dandan-character][hidden],
+    [data-dandan-huahua-together][hidden] { display: none !important; }
+    .cat-companion-button { flex-basis: 23%; width: 23%; }
+    .xiaoyi-character-button { flex-basis: 78%; width: 78%; }
+    .companion-art { display: block; width: 100%; height: auto; }
+    .character-button.is-dragging { z-index: 2; cursor: grabbing; }
+    .dandan-huahua-together {
+      position: absolute;
+      z-index: 2;
+      bottom: 0;
+      left: 50%;
+      width: min(58%, 390px);
+      margin: 0;
+      transform: translate(calc(-50% + var(--drag-x, 0px)), var(--drag-y, 0px));
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .dandan-huahua-together img { display: block; width: 100%; height: auto; }
+    .dandan-huahua-together.is-dragging { cursor: grabbing; }
+    .scene-card.is-trio-layout .character-button,
+    .scene-card.is-trio-layout .dandan-huahua-together { cursor: default; touch-action: auto; }
+    .scene-card.is-trio-layout .character-pair {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      pointer-events: none;
+    }
+    .scene-card.is-trio-layout .xiaoyi-character-button {
+      position: absolute;
+      right: -2%;
+      bottom: 0;
+      width: 78%;
+      pointer-events: auto;
+    }
+    .scene-card.is-trio-layout .dandan-huahua-together {
+      z-index: 2;
+      left: 0;
+      width: min(60%, 430px);
+      transform: translate(var(--drag-x, 0px), var(--drag-y, 0px));
+    }
+
+    .character-button:focus-visible {
+      border-radius: 50%;
+      outline: 2px dashed #f15b35;
+      outline-offset: 5px;
+    }
+
+    .character-art {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: hidden;
+      transform: scale(1);
+      transform-origin: 100% 100%;
+      filter: none;
+    }
+
+    .chat-card {
+      display: flex;
+      min-height: 600px;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    .chat-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .chat-heading h2 {
+      margin: 0;
+      color: #292827;
+      font-size: 17px;
+      font-weight: 730;
+      letter-spacing: -.02em;
+    }
+
+    .chat-heading p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .chat-heading-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chat-sparkle { color: #ee613b; font-size: 22px; }
+
+    .conversation-toggle {
+      min-height: 35px;
+      padding: 6px 11px;
+      border: 1px solid #efc7b8;
+      border-radius: 999px;
+      color: #a34e38;
+      background: #fff8f3;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      transition: background .15s ease, transform .15s ease;
+    }
+
+    .conversation-toggle:hover { transform: translateY(-1px); background: #fff0e8; }
+    .conversation-toggle:focus-visible { outline: 2px solid #e85a36; outline-offset: 3px; }
+
+    .messages {
+      display: flex;
+      min-height: 250px;
+      max-height: 345px;
+      flex: 1 1 auto;
+      flex-direction: column;
+      gap: 13px;
+      overflow-y: auto;
+      padding: 17px 3px 13px;
+      overscroll-behavior: contain;
+      scrollbar-color: #9f9b95 transparent;
+      scrollbar-width: thin;
+    }
+
+    .message-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      animation: message-in .2s ease-out both;
+    }
+
+    @keyframes message-in {
+      from { opacity: 0; transform: translateY(6px); }
+    }
+
+    .message-row.user { justify-content: flex-end; }
+
+    .message-avatar {
+      display: grid;
+      width: 28px;
+      height: 28px;
+      flex: 0 0 28px;
+      place-items: center;
+      border: 1px solid #6f6b66;
+      border-radius: 50%;
+      color: #373431;
+      background: #eeece7;
+      font-size: 14px;
+    }
+
+    .message {
+      max-width: 84%;
+      padding: 10px 13px;
+      border: 1px solid #d1ceca;
+      border-radius: 7px;
+      color: #343230;
+      background: #eeece8;
+      font-size: 13px;
+      line-height: 1.65;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .user .message {
+      border-radius: 7px;
+      color: #fffdfa;
+      border-color: #3d3a38;
+      background: #484542;
+    }
+
+    .typing .message { color: #92858d; letter-spacing: .18em; }
+
+    .quick-title {
+      margin: 3px 0 8px;
+      color: #979099;
+      font-size: 11px;
+    }
+
+    .quick-replies {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-bottom: 15px;
+    }
+
+    .chip {
+      min-height: 33px;
+      padding: 5px 11px;
+      border: 1px solid #76716c;
+      border-radius: 5px;
+      color: #393633;
+      background: #f8f7f3;
+      font-size: 12px;
+      cursor: pointer;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+    }
+
+    .chip:hover { transform: translateY(-1px); border-color: #e85a36; background: #fff1eb; }
+    .chip:focus-visible, .send:focus-visible { outline: 2px solid #e85a36; outline-offset: 2px; }
+
+    .composer {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding-top: 13px;
+      border-top: 1px solid var(--line);
+    }
+
+    .emoji-picker { position: relative; flex: 0 0 auto; }
+    .emoji-picker summary {
+      display: grid;
+      width: 43px;
+      height: 43px;
+      place-items: center;
+      border: 1px solid #77736f;
+      border-radius: 6px;
+      background: #f7f6f2;
+      cursor: pointer;
+      font-size: 21px;
+      list-style: none;
+    }
+    .emoji-picker summary::-webkit-details-marker { display: none; }
+    .emoji-picker summary:hover,
+    .emoji-picker[open] summary { border-color: #e85a36; background: #fff1eb; }
+    .emoji-picker summary:focus-visible,
+    .emoji-option:focus-visible { outline: 2px solid #e85a36; outline-offset: 2px; }
+    .emoji-options {
+      position: absolute;
+      z-index: 5;
+      right: 0;
+      bottom: calc(100% + 9px);
+      display: grid;
+      width: 184px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      padding: 8px;
+      border: 1px solid #77736f;
+      border-radius: 8px;
+      background: #fffdfa;
+      box-shadow: 3px 3px 0 rgba(38, 38, 38, .16);
+    }
+    .emoji-option {
+      display: grid;
+      min-width: 36px;
+      min-height: 36px;
+      place-items: center;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      cursor: pointer;
+      font-size: 23px;
+    }
+    .emoji-option:hover { background: #fff0e8; }
+
+    .composer input {
+      width: 100%;
+      min-width: 0;
+      height: 43px;
+      padding: 0 14px;
+      border: 1px solid #77736f;
+      border-radius: 6px;
+      outline: none;
+      color: var(--ink);
+      background: #f7f6f2;
+      font-size: 13px;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .composer input::placeholder { color: #817d78; }
+    .composer input:focus { border-color: #e85a36; box-shadow: 0 0 0 3px rgba(232, 90, 54, .13); }
+
+    .send {
+      display: grid;
+      width: 43px;
+      height: 43px;
+      flex: 0 0 43px;
+      place-items: center;
+      border: 0;
+      border-radius: 6px;
+      color: white;
+      background: #ed5a35;
+      font-size: 19px;
+      cursor: pointer;
+      transition: transform .15s ease, background .15s ease, opacity .15s ease;
+    }
+
+    .send:hover:not(:disabled) { transform: translateY(-1px); background: #c74627; }
+    .send:disabled { cursor: default; opacity: .48; }
+
+    .privacy {
+      margin: 12px 0 0;
+      color: #65615e;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .footer {
+      padding: 17px 5px 0;
+      color: #4c4946;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .footer span { color: #e85a36; }
+
+    @media (max-width: 720px) {
+      body { padding: 22px 14px 20px; }
+      .topline { margin-bottom: 22px; }
+      .experience-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+      .scene-card { min-height: 700px; }
+      .character-button { flex-basis: min(68%, 390px); width: min(68%, 390px); margin-bottom: 0; }
+      .cat-companion-button { flex-basis: 23%; width: 23%; }
+      .xiaoyi-character-button { flex-basis: 78%; width: 78%; }
+      .chat-card { min-height: 535px; padding: 17px; }
+      .messages { min-height: 220px; max-height: 300px; }
+    }
+
+    @media (max-width: 380px) {
+      body { padding-right: 11px; padding-left: 11px; }
+      .brand { gap: 7px; font-size: 12px; }
+      .online { padding: 6px 9px; font-size: 11px; }
+      .scene-card { min-height: 620px; }
+      .speech { font-size: 12px; }
+      .chat-card { padding: 14px; }
+      .quick-replies { gap: 6px; }
+      .chip { padding-right: 9px; padding-left: 9px; font-size: 11px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body data-flower-room="egg" data-xiaoyi-room="egg" data-dandan-room="egg">
+  <main class="app">
+    <header class="topline">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">蛋</span> 客厅</div>
+      <div class="online"><span class="online-dot" aria-hidden="true"></span> <span data-dandan-presence>蛋蛋在这里</span></div>
+    </header>
+
+    <section class="intro" aria-labelledby="page-title">
+      <h1 id="page-title">你好，我是蛋蛋 <span aria-hidden="true">✿</span></h1>
+      <p>蛋蛋和小易会陪你聊天，花花也会加入，不过她只会喵喵喵。小易每15分钟会在客厅与电竞房之间轮换。</p>
+      <p class="flower-presence" data-flower-status role="status" aria-live="polite">正在确认花花的位置……</p>
+      <p class="flower-presence" data-xiaoyi-status role="status" aria-live="polite">正在确认小易的位置……</p>
+      <p class="flower-presence" data-dandan-status role="status" aria-live="polite">正在确认蛋蛋的位置……</p>
+      <a class="cat-page-link" href="cat.html">🐾 去花花的小窝，和三花猫玩一会儿 <span aria-hidden="true">→</span></a>
+      <a class="cat-page-link" href="esports-room.html">🎮 去电竞房看看 <span aria-hidden="true">→</span></a>
+      <a class="cat-page-link" href="bedroom.html">🛏️ 去卧室看看 <span aria-hidden="true">→</span></a>
+    </section>
+
+    <div class="experience-grid">
+      <section class="scene-card" aria-label="蛋蛋和花花所在的房间">
+        <svg class="scene-art" viewBox="0 0 480 650" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="jiangnan-sky" x1="0" y1="0" x2="0" y2="1">
+              <stop stop-color="#d7e7dc"/>
+              <stop offset=".58" stop-color="#b9d2c5"/>
+              <stop offset="1" stop-color="#8cb5aa"/>
+            </linearGradient>
+            <linearGradient id="jiangnan-water" x1="0" y1="0" x2="0" y2="1">
+              <stop stop-color="#83b9ae"/>
+              <stop offset=".55" stop-color="#55948d"/>
+              <stop offset="1" stop-color="#397c78"/>
+            </linearGradient>
+            <linearGradient id="jiangnan-hill" x1="0" y1="0" x2="0" y2="1">
+              <stop stop-color="#96b9a2"/>
+              <stop offset="1" stop-color="#6d9b88"/>
+            </linearGradient>
+            <g id="jiangnan-house">
+              <path d="M0 20 38 0l39 20v50H0Z" fill="#f4f0df" stroke="#596e66" stroke-width="2"/>
+              <path d="M-8 22 38-4l47 26H67L38 9 8 25Z" fill="#455951" stroke="#394c47" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M15 33h15v24H15zm32-1h17v18H47z" fill="#95b7a4" stroke="#657d70" stroke-width="2"/>
+              <path d="M10 67h60" stroke="#d4cab1" stroke-width="3"/>
+            </g>
+          </defs>
+          <rect width="480" height="650" fill="url(#jiangnan-sky)"/>
+          <circle cx="372" cy="94" r="39" fill="#fff2cf" opacity=".6"/>
+          <circle cx="372" cy="94" r="59" fill="#fff8df" opacity=".14"/>
+          <path d="M0 291q47-88 102-40 41-75 94-32 49-67 104-20 54-80 119-21 29 24 61 5v138H0Z" fill="#a9c7b4" opacity=".58"/>
+          <path d="M0 329q64-93 126-32 49-61 99-15 55-70 111-14 70-69 144 1v104H0Z" fill="url(#jiangnan-hill)" opacity=".8"/>
+          <path d="M0 371q53-49 111-9 58-49 118-6 55-43 112-6 73-42 139-2v82H0Z" fill="#83ac91" opacity=".82"/>
+          <g fill="none" stroke="#f6f0dd" stroke-linecap="round" opacity=".35">
+            <path d="M12 296q53-12 99 0m231-28q42-12 93 0" stroke-width="5"/>
+            <path d="M50 351q49-10 82 0m257-14q42-12 73 0" stroke-width="4"/>
+          </g>
+          <path d="M0 360h480v96H0Z" fill="#99b79b" opacity=".52"/>
+          <g opacity=".96">
+            <use href="#jiangnan-house" transform="translate(18 304) scale(.8)"/>
+            <use href="#jiangnan-house" transform="translate(92 286) scale(1.04)"/>
+            <use href="#jiangnan-house" transform="translate(184 303) scale(.78)"/>
+            <use href="#jiangnan-house" transform="translate(249 278) scale(1.12)"/>
+            <use href="#jiangnan-house" transform="translate(351 300) scale(.94)"/>
+            <use href="#jiangnan-house" transform="translate(419 287) scale(.77)"/>
+          </g>
+          <path d="M0 398q60-16 124 0 64 17 126 0 62-17 119 0t111 0v252H0Z" fill="url(#jiangnan-water)"/>
+          <path d="M0 409q55-18 115-2 69 17 134 0 69-17 131 0 55 15 100 1v17q-51 14-105-1-61-17-127 0-66 18-137 0-57-14-111 2Z" fill="#ded9c5" stroke="#879f89" stroke-width="2"/>
+          <g transform="translate(0 5)">
+            <path d="M153 409Q240 344 327 409Z" fill="#f1ecdc" stroke="#6b7770" stroke-width="3"/>
+            <path d="M171 405Q240 356 309 405" fill="none" stroke="#7c8980" stroke-width="3"/>
+            <path d="M155 410h170m-142 0 4 20m105-20-4 20" stroke="#6b7770" stroke-width="3" stroke-linecap="round"/>
+            <path d="M165 415h150" stroke="#fbf4df" stroke-width="4"/>
+          </g>
+          <g fill="none" stroke="#d6e8d8" stroke-linecap="round" opacity=".42">
+            <path d="M27 465q41-10 82 0m-60 19q32-8 70 0"/>
+            <path d="M318 466q48-11 103 0m-80 20q34-7 75 0"/>
+            <path d="M175 505q28-7 55 0m83 30q43-8 78 0"/>
+            <path d="M34 555q51-9 88 0m220 40q38-8 71 0"/>
+          </g>
+          <g fill="none" stroke="#52755f" stroke-width="4" stroke-linecap="round">
+            <path d="M13 0q35 63 17 136-10 45-24 69m20-116q19-1 37-15m-35 42q-20 0-38-14m35 43q23 2 42-12m-47 39q-17 3-31-8"/>
+            <path d="M474 0q-30 51-20 116 7 44 23 67m-19-91q-17 1-31-12m34 40q20 0 35-12m-29 40q-20 2-37-10"/>
+          </g>
+          <g fill="#6f9a6f" opacity=".8">
+            <ellipse cx="50" cy="76" rx="16" ry="5" transform="rotate(-34 50 76)"/>
+            <ellipse cx="8" cy="99" rx="17" ry="5" transform="rotate(28 8 99)"/>
+            <ellipse cx="64" cy="122" rx="17" ry="5" transform="rotate(-30 64 122)"/>
+            <ellipse cx="12" cy="153" rx="16" ry="5" transform="rotate(24 12 153)"/>
+            <ellipse cx="430" cy="67" rx="16" ry="5" transform="rotate(28 430 67)"/>
+            <ellipse cx="474" cy="91" rx="16" ry="5" transform="rotate(-27 474 91)"/>
+            <ellipse cx="425" cy="124" rx="17" ry="5" transform="rotate(29 425 124)"/>
+          </g>
+        </svg>
+        <div class="scene-wash" aria-hidden="true"></div>
+        <svg class="scene-flowers" viewBox="0 0 480 160" preserveAspectRatio="none" aria-hidden="true">
+          <g fill="none" stroke="#315d50" stroke-width="2.5" stroke-linecap="round">
+            <path d="M49 158q17-21 21-48m-13 31q-17-13-30-11m35-7q17-14 29-12"/>
+            <path d="M426 158q-11-19-12-49m5 31q14-12 28-10m-31-9q-15-15-28-13"/>
+            <path d="M134 160q1-18 10-29m-7 18q-12-8-22-7"/>
+          </g>
+          <g fill="#639178" stroke="#315d50" stroke-width="1.8">
+            <path d="M23 144q21-22 41-4-21 20-41 4Zm35-8q17-22 38-9-15 22-38 9Zm323 4q19-21 39-3-18 21-39 3Zm36-6q17-23 38-8-15 21-38 8Z"/>
+          </g>
+          <g fill="#fff0d9" stroke="#b96c4d" stroke-width="1.7">
+            <path d="M76 112q-13-14-2-20 9-2 10 12 5-15 14-9 6 8-9 18 16-7 19 2 1 10-17 7 14 7 8 16-8 5-17-12-1 17-11 14-9-4 1-19-14 10-19 2-4-8 15-11Z"/>
+            <path d="M389 120q-12-13-3-19 8-2 10 10 4-13 12-8 5 8-7 16 14-6 17 2 1 8-15 6 12 7 6 14-7 4-14-11-2 15-10 12-8-3 1-16-12 8-16 1-3-7 13-9Z"/>
+          </g>
+          <g fill="#e28b55">
+            <circle cx="82" cy="111" r="3.5"/><circle cx="395" cy="119" r="3"/>
+          </g>
+        </svg>
+        <div class="scene-caption"><strong>蛋蛋、小易和花花</strong><span>同伴来访时，蛋蛋和花花会一起入镜</span></div>
+        <div class="character-pair">
+          <button class="character-button cat-companion-button" id="huahua" data-flower type="button" aria-label="花花，一只长毛三花猫，可以拖动" hidden>
+            <span class="speech speaker-huahua" data-speaker-bubble="花" aria-live="polite"></span>
+            <img class="companion-art" src="huahua.webp" alt="花花，一只奶油白、橘色和深棕色相间的长毛三花猫" draggable="false">
+          </button>
+          <button class="character-button xiaoyi-character-button" id="xiaoyi" data-xiaoyi-character type="button" aria-label="小易，可以拖动" hidden>
+            <span class="speech" data-speaker-bubble="小" aria-live="polite"></span>
+            <img class="companion-art" src="xiaoyi.webp?v=2" alt="小易，黑色蓬松短发、戴黑框眼镜并穿白色T恤的卡通人物" draggable="false">
+          </button>
+          <button class="character-button" id="character" data-dandan-character type="button" aria-label="点一点蛋蛋，和她互动" hidden>
+            <img class="character-art" data-dandan-default-art src="1.webp" alt="穿白色蕾丝婚纱的蛋蛋" draggable="false">
+          </button>
+        </div>
+        <figure class="dandan-huahua-together" data-dandan-huahua-together data-flower-picker-trigger hidden>
+          <img src="dandan-huahua-floral.webp?v=1" alt="穿白色刺绣中式礼服的蛋蛋抱着花花的合照" draggable="false">
+        </figure>
+
+      </section>
+
+      <section class="chat-card" aria-labelledby="chat-title">
+        <header class="chat-heading">
+          <div>
+            <h2 id="chat-title">和蛋蛋说说话</h2>
+            <p>小易和蛋蛋正在聊天，你也可以加入</p>
+          </div>
+          <div class="chat-heading-actions">
+            <button class="conversation-toggle" id="conversation-toggle" type="button" aria-pressed="true">暂停对话</button>
+            <span class="chat-sparkle" aria-hidden="true">✧</span>
+          </div>
+        </header>
+
+        <div class="messages" id="messages" role="log" aria-live="polite" aria-relevant="additions text">
+          <div class="message-row">
+            <span class="message-avatar" aria-hidden="true">蛋</span>
+            <div class="message">嗨！我叫蛋蛋 ☁️ 很喜欢听故事，也喜欢认识新朋友。今天想聊些什么呢？</div>
+          </div>
+        </div>
+
+        <p class="quick-title">试着和我聊聊</p>
+        <div class="quick-replies" aria-label="快捷对话">
+          <button class="chip" type="button" data-message="你喜欢做什么？">你喜欢做什么？</button>
+          <button class="chip" type="button" data-message="给我讲个小故事吧">讲个小故事</button>
+          <button class="chip" type="button" data-message="今天有点不开心">今天有点不开心</button>
+          <button class="chip" type="button" data-message="说个谜语给我猜">猜个谜语</button>
+        </div>
+
+        <form class="composer" id="chat-form">
+          <details class="emoji-picker">
+            <summary aria-label="打开表情选择器" title="添加表情">😊</summary>
+            <div class="emoji-options" role="group" aria-label="选择一个表情">
+              <button class="emoji-option" type="button" aria-label="微笑" data-emoji="😊">😊</button>
+              <button class="emoji-option" type="button" aria-label="笑出眼泪" data-emoji="😂">😂</button>
+              <button class="emoji-option" type="button" aria-label="爱心" data-emoji="🥰">🥰</button>
+              <button class="emoji-option" type="button" aria-label="拥抱" data-emoji="🤗">🤗</button>
+              <button class="emoji-option" type="button" aria-label="难过" data-emoji="🥺">🥺</button>
+              <button class="emoji-option" type="button" aria-label="惊讶" data-emoji="😮">😮</button>
+              <button class="emoji-option" type="button" aria-label="庆祝" data-emoji="🎉">🎉</button>
+              <button class="emoji-option" type="button" aria-label="小猫" data-emoji="🐱">🐱</button>
+            </div>
+          </details>
+          <input id="chat-input" type="text" maxlength="240" autocomplete="off" aria-label="输入想对蛋蛋说的话" placeholder="写一句话给蛋蛋…" required>
+          <button class="send" id="send-button" type="submit" aria-label="发送消息" disabled>↑</button>
+        </form>
+        <p class="privacy">图片仅在本地展示 · 对话仅在本页面运行</p>
+      </section>
+    </div>
+
+    <footer class="footer">愿每一朵云，都有自己的晴天 <span>✿</span></footer>
+  </main>
+
+  <script>
+    (() => {
+      const form = document.querySelector("#chat-form");
+      const input = document.querySelector("#chat-input");
+      const sendButton = document.querySelector("#send-button");
+      const messages = document.querySelector("#messages");
+      const character = document.querySelector("#character");
+      const huahua = document.querySelector("#huahua");
+      const xiaoyi = document.querySelector("#xiaoyi");
+      const conversationToggle = document.querySelector("#conversation-toggle");
+      const sceneCard = document.querySelector(".scene-card");
+      let isReplying = false;
+      let replyNumber = 0;
+      let conversationState = "idle";
+      let conversationIndex = 0;
+      let conversationTimer;
+      let huahuaIsHere = false;
+      let dandanIsHere = false;
+      let xiaoyiIsHere = false;
+      let trioTogether = false;
+      let conversationKind = null;
+      let activeConversation = [];
+      let activeChatSpeaker = "蛋";
+      let flowerClickTimer;
+      let dandanClickTimer;
+      const dragOffsets = new WeakMap();
+      let activeDrag = null;
+
+      function canCharactersTalk() {
+        return dandanIsHere && xiaoyiIsHere;
+      }
+
+      function updateTrioLayout() {
+        const together = dandanIsHere && xiaoyiIsHere && huahuaIsHere;
+        if (together && !trioTogether) {
+          [character, huahua, xiaoyi].forEach((target) => {
+            target.style.removeProperty("transform");
+            dragOffsets?.set(target, { x: 0, y: 0 });
+          });
+          const composite = document.querySelector("[data-dandan-huahua-together]");
+          if (composite) {
+            composite.style.removeProperty("--drag-x");
+            composite.style.removeProperty("--drag-y");
+            dragOffsets?.set(composite, { x: 0, y: 0 });
+          }
+        }
+        trioTogether = together;
+        sceneCard.classList.toggle("is-trio-layout", trioTogether);
+      }
+
+      function updatePairConversationAvailability() {
+        updateTrioLayout();
+        const canTalk = canCharactersTalk();
+        if (!canTalk && conversationKind === "pair") {
+          window.clearTimeout(conversationTimer);
+          conversationState = "idle";
+          conversationKind = null;
+          conversationToggle.setAttribute("aria-pressed", "false");
+        }
+        conversationToggle.disabled = !canTalk && conversationKind !== "flower";
+        if (conversationState === "running") {
+          conversationToggle.textContent = "暂停对话";
+        } else if (conversationState === "paused") {
+          conversationToggle.textContent = "继续对话";
+        } else {
+          conversationToggle.textContent = canTalk
+            ? "再听他们聊聊"
+            : conversationKind === "flower" ? "暂停对话" : "他们不在一起";
+        }
+      }
+
+      function maybeAddEmoji(text) {
+        const emojis = ["😊", "☀️", "🌷", "🥰", "☁️", "✨", "🤗", "🎉"];
+        return Math.random() < 0.35
+          ? `${text} ${emojis[Math.floor(Math.random() * emojis.length)]}`
+          : text;
+      }
+
+      function huahuaSays() {
+        const meows = ["喵", "喵？", "喵喵喵", "喵呜"];
+        return meows[Math.floor(Math.random() * meows.length)];
+      }
+
+      const conversation = [
+        { speaker: "小", text: "蛋蛋，客厅今天真舒服，你最喜欢这里的什么？" },
+        { speaker: "蛋", text: "我喜欢暖暖的阳光，还有花花在身边陪着我们。" },
+        { speaker: "花", huahua: true },
+        { speaker: "小", text: "我也喜欢和你聊天。你今天想聊什么？" },
+        { speaker: "蛋", text: "给你讲个小故事吧：有一朵迷路的小云，正在找新朋友。" },
+        { speaker: "花", huahua: true },
+        { speaker: "小", text: "后来小云找到朋友了吗？" },
+        { speaker: "蛋", text: "找到了呀！它在客厅遇见了愿意听故事的伙伴。" },
+        { speaker: "小", text: "真好，有大家陪伴的客厅变得更热闹了。" },
+        { speaker: "蛋", text: "有你们在身边，我每天都很开心！" }
+      ];
+
+      const flowerConversation = [
+        { speaker: "蛋", text: "花花，今天在小窝里玩得开心吗？" },
+        { speaker: "花", huahua: true },
+        { speaker: "蛋", text: "听起来你今天过得很舒服呀。" },
+        { speaker: "花", huahua: true },
+        { speaker: "蛋", text: "那我们就一起晒晒太阳、休息一会儿吧。" },
+        { speaker: "花", huahua: true }
+      ];
+
+      function scheduleConversationLine(delay = 1800) {
+        window.clearTimeout(conversationTimer);
+        conversationTimer = window.setTimeout(() => {
+          if (conversationState !== "running") return;
+          if (conversationKind === "pair" && !canCharactersTalk()) {
+            updatePairConversationAvailability();
+            return;
+          }
+          const line = activeConversation[conversationIndex++];
+          if (line.huahua && !huahuaIsHere) {
+            scheduleConversationLine(0);
+            return;
+          }
+          const spokenText = line.huahua ? huahuaSays() : maybeAddEmoji(line.text);
+          setSpeech(spokenText, line.speaker);
+          addMessage(spokenText, "friend", line.speaker);
+          if (conversationIndex === activeConversation.length) {
+            conversationState = "idle";
+            conversationKind = null;
+            updatePairConversationAvailability();
+            return;
+          }
+          scheduleConversationLine();
+        }, delay);
+      }
+
+      function startConversation() {
+        if (!canCharactersTalk()) {
+          updatePairConversationAvailability();
+          return;
+        }
+        window.clearTimeout(conversationTimer);
+        conversationIndex = 0;
+        activeConversation = conversation.filter((entry) => !entry.huahua || huahuaIsHere);
+        conversationState = "running";
+        conversationKind = "pair";
+        conversationToggle.textContent = "暂停对话";
+        conversationToggle.setAttribute("aria-pressed", "true");
+        scheduleConversationLine(900);
+      }
+
+      function startFlowerConversation() {
+        window.clearTimeout(conversationTimer);
+        activeConversation = flowerConversation;
+        conversationIndex = 0;
+        conversationState = "running";
+        conversationKind = "flower";
+        activeChatSpeaker = "蛋";
+        conversationToggle.disabled = false;
+        input.placeholder = "写一句话给蛋蛋…";
+        input.setAttribute("aria-label", "输入想对蛋蛋说的话");
+        conversationToggle.textContent = "暂停对话";
+        conversationToggle.setAttribute("aria-pressed", "true");
+        scheduleConversationLine(350);
+      }
+
+      function toggleConversation() {
+        if (conversationState === "running") {
+          window.clearTimeout(conversationTimer);
+          conversationState = "paused";
+          conversationToggle.textContent = "继续对话";
+          conversationToggle.setAttribute("aria-pressed", "false");
+        } else if (conversationState === "paused") {
+          conversationState = "running";
+          conversationToggle.textContent = "暂停对话";
+          conversationToggle.setAttribute("aria-pressed", "true");
+          scheduleConversationLine();
+        } else {
+          startConversation();
+        }
+      }
+
+      conversationToggle.addEventListener("click", toggleConversation);
+      window.addEventListener("flower-room-change", (event) => {
+        huahuaIsHere = event.detail.room === "egg";
+        updatePairConversationAvailability();
+      });
+      window.addEventListener("dandan-room-change", (event) => {
+        dandanIsHere = event.detail.isHere;
+        updatePairConversationAvailability();
+        if (canCharactersTalk() && conversationState === "idle") startConversation();
+      });
+      window.addEventListener("xiaoyi-room-change", (event) => {
+        xiaoyiIsHere = event.detail.room === "egg";
+        updatePairConversationAvailability();
+        if (canCharactersTalk() && conversationState === "idle") startConversation();
+      });
+      updatePairConversationAvailability();
+
+      const replies = [
+        {
+          words: ["你好", "嗨", "哈喽", "hello", "hi"],
+          mood: "happy",
+          speech: "你好呀！今天也想和你一起散散步～",
+          lines: ["你好呀！见到你我就像收到一片漂亮的云 ☁️", "嗨～欢迎来我的小院坐坐！", "今天也很高兴认识你，想从什么话题开始？"]
+        },
+        {
+          words: ["叫什么", "名字", "你是谁"],
+          mood: "happy",
+          speech: "我是蛋蛋，住在云间的小院里。",
+          lines: ["我叫蛋蛋！很高兴认识你。", "我是蛋蛋呀，最喜欢收集有趣的小故事。"]
+        },
+        {
+          words: ["喜欢", "爱好", "做什么"],
+          mood: "curious",
+          speech: "我喜欢故事、云朵，还有认识新朋友！",
+          lines: ["我最喜欢听故事、看云朵变形，也喜欢和你聊天！", "喜欢在庭院里看花，也喜欢发现生活里的小惊喜。你呢？"]
+        },
+        {
+          words: ["不开心", "难过", "伤心", "烦", "累", "压力"],
+          mood: "gentle",
+          speech: "来，先坐下休息一会儿，我陪着你。",
+          lines: ["听起来你今天不太容易。想说说发生了什么吗？我会好好听。", "先不用急着振作，我陪你安静待一会儿。愿意告诉我一点点吗？", "抱抱你。喝口水、慢慢呼吸一下也好，我在这里听你说。"]
+        },
+        {
+          words: ["开心", "高兴", "快乐", "成功", "太棒"],
+          mood: "happy",
+          speech: "你的好心情也传给我啦！",
+          lines: ["听到这个我也跟着开心起来了！快给我讲讲～", "哇，真为你高兴！这份快乐要好好收藏起来。"]
+        },
+        {
+          words: ["故事", "从前", "讲一个"],
+          mood: "curious",
+          speech: "从前，有一朵云想去看看大海……",
+          lines: ["从前，有一朵迷路的小云，落在一座山顶上。山茶花对她说：“别着急，每一阵风都会带你去新的地方。”于是小云又笑了起来。", "有只小兔子每天都把月亮当作灯。一个下雨的夜晚，它把伞借给了星星。从那以后，星星每晚都来陪它聊天。"]
+        },
+        {
+          words: ["谜语", "猜", "脑筋"],
+          mood: "curious",
+          speech: "我准备好啦！仔细听这道谜语～",
+          lines: ["来猜猜看：什么东西明明是你的，别人却比你用得更多？（提示：每天都会有人叫它。）", "考考你：什么“布”剪不断，风一吹还会满天跑？"]
+        },
+        {
+          words: ["天气", "下雨", "太阳", "晴天"],
+          mood: "curious",
+          speech: "不管晴天雨天，我都能陪你看云。",
+          lines: ["今天也抬头看看天空吧，说不定能找到一朵像小兔子的云。", "天气会变，心情也会变。希望你今天能遇见一点好天气。"]
+        },
+        {
+          words: ["谢谢", "感谢"],
+          mood: "happy",
+          speech: "不用客气呀，能陪你聊天我也很开心！",
+          lines: ["不用谢！你愿意和我分享，我已经很开心啦。", "嘿嘿，能帮上一点忙就好。还想聊些什么？"]
+        }
+      ];
+
+      function setSpeech(text, speaker = "蛋") {
+        const bubble = document.querySelector(`[data-speaker-bubble="${speaker}"]`);
+        if (!bubble) return;
+        document.querySelectorAll("[data-speaker-bubble].is-active").forEach((activeBubble) => {
+          activeBubble.classList.remove("is-active");
+        });
+        bubble.textContent = text;
+        bubble.classList.add("is-active");
+        bubble.classList.remove("pop");
+        void bubble.offsetWidth;
+        bubble.classList.add("pop");
+      }
+
+      function addMessage(text, side, speaker = "蛋") {
+        const row = document.createElement("div");
+        row.className = `message-row${side === "user" ? " user" : ""}`;
+
+        if (side !== "user") {
+          const avatar = document.createElement("span");
+          avatar.className = "message-avatar";
+          avatar.setAttribute("aria-hidden", "true");
+          avatar.textContent = speaker;
+          row.append(avatar);
+        }
+
+        const bubble = document.createElement("div");
+        bubble.className = "message";
+        bubble.textContent = text;
+        row.append(bubble);
+        messages.append(row);
+        messages.scrollTop = messages.scrollHeight;
+        return row;
+      }
+
+      function selectReply(text) {
+        const normalized = text.toLowerCase();
+        return replies.find((rule) => rule.words.some((word) => normalized.includes(word)));
+      }
+
+      function sendMessage(text) {
+        const trimmed = text.trim();
+        if (!trimmed || isReplying) return;
+
+        if (conversationState !== "idle") {
+          window.clearTimeout(conversationTimer);
+          conversationState = "idle";
+          conversationKind = null;
+          conversationToggle.setAttribute("aria-pressed", "false");
+          updatePairConversationAvailability();
+        }
+        addMessage(trimmed, "user");
+        input.value = "";
+        sendButton.disabled = true;
+        isReplying = true;
+
+        const typing = addMessage("···", "friend");
+        typing.classList.add("typing");
+        const rule = selectReply(trimmed);
+
+        window.setTimeout(() => {
+          typing.remove();
+          if (activeChatSpeaker === "小") {
+            const xiaoyiAnswers = rule?.mood === "gentle"
+                ? ["听起来你最近不太容易。想说的话我会认真听。", "先别急，我陪你聊一会儿。"]
+              : rule?.mood === "happy"
+                  ? ["听到你这么说我也很开心！", "太好了，替你开心！"]
+                : rule?.mood === "curious"
+                    ? ["这个话题挺有意思的！你是怎么想的？", "我也想听听，后来怎么样了？"]
+                    : ["我听到了。可以再多跟我说一些吗？", "嗯，我在认真听。你还想聊些什么？"];
+            const answer = maybeAddEmoji(xiaoyiAnswers[replyNumber++ % xiaoyiAnswers.length]);
+            addMessage(answer, "friend", "小");
+            setSpeech(answer, "小");
+            isReplying = false;
+            input.focus();
+            return;
+          }
+          const fallback = [
+            "我在认真听呢～可以再多告诉我一点吗？",
+            "这个话题好有意思呀！你自己是怎么想的？",
+            "嗯嗯，我记住啦。后来呢？",
+            "听你这么说，我也想到了好多事情。愿意再讲讲吗？"
+          ];
+          const answer = maybeAddEmoji(rule
+            ? rule.lines[replyNumber++ % rule.lines.length]
+            : fallback[replyNumber++ % fallback.length]);
+          addMessage(answer, "friend");
+          setSpeech(maybeAddEmoji(rule ? rule.speech : "我在认真听你说呢～"));
+          character.dataset.mood = rule ? rule.mood : "curious";
+          character.classList.remove("is-waving", "is-happy");
+          isReplying = false;
+          if (huahuaIsHere) {
+            const meow = huahuaSays();
+            addMessage(meow, "friend", "花");
+            setSpeech(meow, "花");
+          }
+          input.focus();
+        }, 550);
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        sendMessage(input.value);
+      });
+
+      input.addEventListener("input", () => {
+        sendButton.disabled = !input.value.trim() || isReplying;
+      });
+
+      const emojiPicker = document.querySelector(".emoji-picker");
+      document.querySelectorAll("[data-emoji]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const start = input.selectionStart ?? input.value.length;
+          const end = input.selectionEnd ?? start;
+          input.setRangeText(button.dataset.emoji, start, end, "end");
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          emojiPicker.open = false;
+          input.focus();
+        });
+      });
+
+      document.querySelectorAll("[data-message]").forEach((button) => {
+        button.addEventListener("click", () => sendMessage(button.dataset.message));
+      });
+
+      function reactToCharacter(target) {
+        const reactions = [
+          { className: "is-waving", mood: "happy", speech: "嘿！你来啦，今天想聊点什么？" },
+          { className: "is-happy", mood: "happy", speech: "被你点到啦～送你一朵小云！" },
+          { className: "", mood: "curious", speech: "嗯？是有什么悄悄话想告诉我吗？" }
+        ];
+        const reaction = reactions[Math.floor(Math.random() * reactions.length)];
+        target.classList.remove("is-waving", "is-happy");
+        target.dataset.mood = reaction.mood;
+        if (reaction.className) {
+          void target.offsetWidth;
+          target.classList.add(reaction.className);
+        }
+        activeChatSpeaker = "蛋";
+        setSpeech(reaction.speech);
+        addMessage(reaction.speech, "friend");
+      }
+
+      function finishDrag(event) {
+        if (!activeDrag || event.pointerId !== activeDrag.pointerId) return;
+        const { target, moved } = activeDrag;
+        target.classList.remove("is-dragging");
+        if (moved) {
+          target.dataset.draggedClick = "true";
+          window.setTimeout(() => delete target.dataset.draggedClick, 0);
+        }
+        activeDrag = null;
+      }
+
+      function startDrag(event) {
+        if (!event.isPrimary || event.button !== 0 || trioTogether) return;
+        const target = event.currentTarget;
+        delete target.dataset.draggedClick;
+        const offset = dragOffsets.get(target) || { x: 0, y: 0 };
+        const rect = target.getBoundingClientRect();
+        activeDrag = {
+          target,
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          offset,
+          baseLeft: rect.left - offset.x,
+          baseTop: rect.top - offset.y,
+          width: rect.width,
+          height: rect.height,
+          moved: false
+        };
+      }
+
+      function moveDrag(event) {
+        if (!activeDrag || event.pointerId !== activeDrag.pointerId) return;
+        if (trioTogether) {
+          activeDrag.target.classList.remove("is-dragging");
+          activeDrag = null;
+          return;
+        }
+        const drag = activeDrag;
+        let x = drag.offset.x + event.clientX - drag.startX;
+        let y = drag.offset.y + event.clientY - drag.startY;
+        const bounds = document.querySelector(".scene-card").getBoundingClientRect();
+        x = Math.max(bounds.left + 6 - drag.baseLeft, Math.min(x, bounds.right - 6 - drag.width - drag.baseLeft));
+        y = Math.max(bounds.top + 6 - drag.baseTop, Math.min(y, bounds.bottom - 6 - drag.height - drag.baseTop));
+        if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 4) {
+          drag.moved = true;
+          drag.target.classList.add("is-dragging");
+        }
+        if (drag.target.matches("[data-dandan-huahua-together]")) {
+          drag.target.style.setProperty("--drag-x", `${x}px`);
+          drag.target.style.setProperty("--drag-y", `${y}px`);
+        } else {
+          drag.target.style.transform = `translate(${x}px, ${y}px)`;
+        }
+        dragOffsets.set(drag.target, { x, y });
+      }
+
+      window.addEventListener("pointermove", moveDrag);
+      window.addEventListener("pointerup", finishDrag);
+      window.addEventListener("pointercancel", finishDrag);
+
+      [character, huahua, xiaoyi, document.querySelector("[data-dandan-huahua-together]")].filter(Boolean).forEach((target) => {
+        target.addEventListener("pointerdown", startDrag);
+        if (target.matches("[data-dandan-huahua-together]")) return;
+        target.addEventListener("click", (event) => {
+          if (!target.dataset.draggedClick) return;
+          delete target.dataset.draggedClick;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }, true);
+        target.addEventListener("click", (event) => {
+          if (target === xiaoyi) {
+            window.clearTimeout(conversationTimer);
+            conversationState = "idle";
+            conversationKind = null;
+            updatePairConversationAvailability();
+            conversationToggle.setAttribute("aria-pressed", "false");
+            activeChatSpeaker = "小";
+            setSpeech("嗨！想聊什么都可以告诉我。", "小");
+            addMessage("嗨！想聊什么都可以告诉我。", "friend", "小");
+            input.placeholder = "写一句话给小易…";
+            input.setAttribute("aria-label", "输入想对小易说的话");
+            input.focus();
+            return;
+          }
+          if (target === huahua) {
+            window.clearTimeout(flowerClickTimer);
+            if (event.detail === 1) {
+              flowerClickTimer = window.setTimeout(startFlowerConversation, 280);
+            }
+            return;
+          }
+          window.clearTimeout(dandanClickTimer);
+          if (event.detail > 1) return;
+          dandanClickTimer = window.setTimeout(() => {
+            activeChatSpeaker = "蛋";
+            input.placeholder = "写一句话给蛋蛋…";
+            input.setAttribute("aria-label", "输入想对蛋蛋说的话");
+            reactToCharacter(target);
+          }, 280);
+          return;
+        });
+      });
+
+    })();
+  </script>
+  <script src="flower-room.js"></script>
+  <script src="xiaoyi-room.js"></script>
+  <script src="dandan-room.js"></script>
+  <script src="flower-room-picker.js"></script>
+</body>
+</html>

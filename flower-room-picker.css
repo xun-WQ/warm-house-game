@@ -1,0 +1,82 @@
+.flower-room-picker {
+  position: fixed;
+  z-index: 20;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: max-content;
+  max-width: min(100vw - 24px, 100%);
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgb(255 246 183 / 88%);
+  border-radius: 16px;
+  color: #59420e;
+  background: rgb(255 222 105 / 93%);
+  box-shadow: 0 8px 26px rgb(71 51 5 / 24%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.flower-room-picker[hidden] { display: none !important; }
+.flower-room-picker-options {
+  display: flex;
+  gap: 8px;
+}
+.flower-room-picker-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.flower-room-picker-close {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: #705514;
+  background: rgb(255 250 220 / 92%);
+  cursor: pointer;
+  font-size: 18px;
+}
+.flower-room-picker-option {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid rgb(158 120 29 / 38%);
+  border-radius: 10px;
+  color: #59420e;
+  background: rgb(255 251 224 / 92%);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  text-align: center;
+  white-space: nowrap;
+}
+.flower-room-picker-option:hover,
+.flower-room-picker-option:focus-visible {
+  border-color: rgb(138 99 14 / 65%);
+  background: rgb(255 255 238 / 94%);
+}
+.flower-room-picker-close:focus-visible,
+.flower-room-picker-option:focus-visible {
+  outline: 2px solid #9b710b;
+  outline-offset: 2px;
+}
+@media (max-width: 520px) {
+  .flower-room-picker {
+    width: max-content;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 8px;
+  }
+  .flower-room-picker-heading {
+    flex: 1 0 100%;
+    justify-content: space-between;
+  }
+  .flower-room-picker-options { flex: 1 0 100%; }
+  .flower-room-picker-option { flex: 1 1 0; }
+}

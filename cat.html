@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff8ee">
+  <title>花花的小窝 · 互动三花猫</title>
+  <script src="room-shell-bridge.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Trebuchet MS", "Microsoft YaHei", "PingFang SC", ui-rounded, system-ui, sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --ink: #473b36;
+      --muted: #95847b;
+      --coral: #ef876d;
+      --coral-deep: #dd7059;
+      --cream: #fff8ee;
+      --line: #f0e5d9;
+      --green: #829d75;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      padding: 28px 22px 24px;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 10% 12%, rgba(255, 226, 202, .66), transparent 27rem),
+        radial-gradient(ellipse at 92% 77%, rgba(223, 235, 215, .6), transparent 24rem),
+        var(--cream);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+    button { color: inherit; font: inherit; }
+    .app { width: min(100%, 1050px); margin: 0 auto; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 34px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); font-size: 14px; font-weight: 800; text-decoration: none; }
+    .brand-mark { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid #ead6c4; border-radius: 14px; background: #fffdf8; box-shadow: 0 3px 0 #f0e0d1; font-size: 22px; }
+    .back-link { color: #8d7569; font-size: 13px; text-decoration: none; }
+    .back-link:hover { color: var(--coral-deep); text-decoration: underline; text-underline-offset: 3px; }
+    .room-nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px 14px; }
+    .intro { margin: 0 0 24px; }
+    .eyebrow { margin: 0 0 7px; color: #b18570; font-size: 12px; font-weight: 750; letter-spacing: .12em; }
+    h1 { margin: 0; color: var(--ink); font-size: clamp(30px, 5vw, 43px); letter-spacing: -.05em; line-height: 1.18; }
+    h1 span { color: var(--coral-deep); }
+    .intro-copy { margin: 9px 0 0; color: var(--muted); font-size: 14px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(310px, .88fr); align-items: stretch; gap: 20px; }
+    .scene, .side-card { border: 1px solid #efdfd0; border-radius: 26px; background: rgba(255, 253, 249, .91); box-shadow: 0 13px 38px rgba(117, 82, 56, .08); }
+    .scene { position: relative; display: flex; min-height: 535px; align-items: flex-end; justify-content: center; overflow: hidden; isolation: isolate; background: #fff2d8 url("huahua-room.webp") center / cover no-repeat; }
+    .cat-button { position: relative; z-index: 1; display: block; width: min(52%, 280px); margin: 0 0 18px; padding: 0; border: 0; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .cat-button[hidden] { display: none !important; }
+    .dandan-guest { position: absolute; z-index: 2; bottom: 22px; left: 3%; width: min(24%, 170px); margin: 0; filter: drop-shadow(0 6px 7px #6d49301f); transform: translate(var(--drag-x, 0px), var(--drag-y, 0px)); cursor: grab; touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+    .dandan-guest[hidden] { display: none !important; }
+    .dandan-guest.is-dragging { cursor: grabbing; }
+    .dandan-guest > img:not(.is-hidden) { display: block; width: 100%; height: auto; transform: scale(2); transform-origin: 0 100%; }
+    .dandan-guest .is-hidden { display: none !important; }
+    .dandan-guest figcaption { position: absolute; top: 3%; left: 50%; width: max-content; max-width: 180%; padding: 5px 9px; border: 1px solid #f2c6a8; border-radius: 999px; color: #70564b; background: #fffdf9ed; box-shadow: 0 4px 12px #9f75521a; font-size: clamp(9px, 1.2vw, 12px); font-weight: 700; transform: translate(-50%, -100%); }
+    .cat-button:focus-visible { border-radius: 22px; outline: 3px solid #e9a18a; outline-offset: 5px; }
+    .cat { display: block; width: 100%; height: auto; background: transparent; filter: drop-shadow(0 7px 5px #6d493017); transform-origin: 50% 94%; }
+    .cat-button:hover .cat { filter: drop-shadow(0 7px 5px #6d493017); }
+    .scene.is-petting .cat { animation: happy-bounce .42s ease; }
+    .scene.is-eating .cat { animation: nibble .4s ease-in-out 3; }
+    .scene.is-playing .cat { animation: play-bounce .65s ease-in-out 2; }
+    @keyframes happy-bounce { 40% { transform: translateY(-11px) rotate(-2deg); } 70% { transform: rotate(2deg); } }
+    @keyframes nibble { 50% { transform: translateY(4px) rotate(1deg); } }
+    @keyframes play-bounce { 50% { transform: translateY(-17px) rotate(4deg); } }
+    .float-heart { position: absolute; z-index: 2; left: 50%; bottom: 48%; pointer-events: none; animation: float-up .9s ease-out forwards; }
+    @keyframes float-up { to { opacity: 0; transform: translate(var(--drift), -100px) scale(1.45) rotate(14deg); } }
+    .toy { position: absolute; z-index: 2; right: 14%; bottom: 130px; font-size: 34px; opacity: 0; pointer-events: none; }
+    .scene.is-playing .toy { animation: toy-wiggle .8s ease-in-out 2; }
+    @keyframes toy-wiggle { 0% { opacity: 1; transform: translate(20px, 0) rotate(0); } 50% { opacity: 1; transform: translate(-105px, -25px) rotate(180deg); } 100% { opacity: 0; transform: translate(-15px, 0) rotate(360deg); } }
+    .scene-hint { position: absolute; z-index: 2; right: 15px; bottom: 13px; left: 15px; width: fit-content; max-width: calc(100% - 30px); margin: 0 auto; padding: 4px 10px; border-radius: 999px; color: #70564b; background: rgba(255, 253, 249, .9); font-size: 11px; text-align: center; }
+    .side-card { display: flex; flex-direction: column; padding: 25px; }
+    .card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+    .card-heading h2 { margin: 0; font-size: 19px; letter-spacing: -.03em; }
+    .card-heading p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+    .mood-pill { flex: 0 0 auto; padding: 5px 10px; border-radius: 999px; color: #8f795e; background: #f7efdf; font-size: 11px; font-weight: 700; }
+    .stats { display: grid; gap: 16px; padding: 21px 0; }
+    .stat-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; color: #77665d; font-size: 12px; }
+    .stat-value { color: #a08d82; font-size: 11px; font-variant-numeric: tabular-nums; }
+    .meter { height: 9px; overflow: hidden; border-radius: 99px; background: #f1ebe3; }
+    .meter-fill { display: block; width: 50%; height: 100%; border-radius: inherit; background: #eeb18f; transition: width .45s ease; }
+    .meter-fill.affection { background: #e9938c; }
+    .meter-fill.energy { background: #a9bb8c; }
+    .actions-label { margin: 2px 0 10px; color: #927e72; font-size: 12px; font-weight: 700; }
+    .actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+    .action { display: grid; min-height: 84px; align-content: center; justify-items: center; gap: 5px; padding: 10px 5px; border: 1px solid #efdfd2; border-radius: 15px; background: #fffaf4; cursor: pointer; transition: transform .17s ease, border-color .17s ease, background .17s ease, box-shadow .17s ease; }
+    .action:hover:not(:disabled) { transform: translateY(-3px); border-color: #e9b6a4; background: #fff5ed; box-shadow: 0 5px 13px #ba765414; }
+    .action:focus-visible { outline: 3px solid #e9a18a; outline-offset: 2px; }
+    .action:disabled { cursor: not-allowed; opacity: .48; }
+    .action-icon { font-size: 24px; line-height: 1; }
+    .action-name { font-size: 11px; font-weight: 700; }
+    .note { display: grid; min-height: 55px; align-content: center; margin-top: 17px; padding: 10px 13px; border-radius: 12px; color: #857064; background: #faf3e9; font-size: 12px; }
+    .bond { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 18px; color: #a18e82; font-size: 11px; }
+    .bond strong { color: #887267; font-weight: 700; }
+    .reset { padding: 5px 8px; border: 0; border-radius: 8px; color: #9b887c; background: transparent; font-size: 11px; cursor: pointer; }
+    .reset:hover { color: var(--coral-deep); background: #fff1e8; }
+    .footer { padding: 19px 0 0; color: #a08e81; font-size: 11px; text-align: center; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+    @media (max-width: 740px) {
+      body { padding: 20px 15px; }
+      .topbar { margin-bottom: 27px; }
+      .layout { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+      .scene { min-height: 440px; }
+      .cat-button { width: min(52%, 280px); }
+      .side-card { padding: 21px; }
+    }
+    @media (max-width: 400px) {
+      body { padding-right: 11px; padding-left: 11px; }
+      .scene { min-height: 390px; }
+      .side-card { padding: 17px; }
+      .actions { gap: 6px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body data-flower-room="flower" data-dandan-room="flower">
+  <main class="app">
+    <header class="topbar">
+      <a class="brand" href="cat.html"><span class="brand-mark" aria-hidden="true">🐾</span>花花的小窝</a>
+      <nav class="room-nav" aria-label="切换房间">
+        <a class="back-link" href="cloud-notes.html">← 客厅</a>
+        <a class="back-link" href="esports-room.html">🎮 电竞房</a>
+        <a class="back-link" href="bedroom.html">🛏️ 卧室</a>
+      </nav>
+    </header>
+
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">一只猫猫 · 一点点陪伴</p>
+      <h1 id="page-title">今天也来陪 <span>花花</span> 玩吧</h1>
+      <p class="intro-copy">花花是一只软乎乎的长毛三花猫。点点她、喂她吃饭，或者拿逗猫棒陪她玩～</p>
+      <p id="flower-location" data-flower-status role="status" aria-live="polite">正在确认花花的位置……</p>
+    </section>
+
+    <div class="layout">
+      <section class="scene" id="scene" aria-label="花花的小窝，带有吊床、猫爬架和猫窝的插画房间">
+        <span class="toy" id="toy" aria-hidden="true">🪶</span>
+        <figure class="dandan-guest" data-dandan-character hidden>
+          <img data-dandan-default-art src="dandan-friendly.webp" alt="来花花的小窝做客的蛋蛋" draggable="false">
+          <img class="is-hidden" data-dandan-together-art data-flower-picker-trigger src="dandan-huahua-floral.webp?v=1" alt="穿白色刺绣中式礼服的蛋蛋抱着花花，一起在猫窝休息" draggable="false">
+        </figure>
+        <button class="cat-button" id="cat-button" data-flower type="button" aria-label="摸摸花花的头" hidden>
+          <img class="cat" src="huahua.webp" alt="花花，一只奶油白、橘色和深棕色相间的长毛三花猫" draggable="false">
+        </button>
+        <p class="scene-hint">点点花花的毛茸茸脑袋，试试看会发生什么</p>
+      </section>
+
+      <section class="side-card" aria-labelledby="status-title">
+        <header class="card-heading">
+          <div><h2 id="status-title">花花今天的状态</h2><p>照顾她的心情，也照顾自己的心情</p></div>
+          <span class="mood-pill" id="mood" aria-live="polite">开心等你</span>
+        </header>
+        <div class="stats" aria-label="花花的状态">
+          <div>
+            <div class="stat-top"><span>💗 亲密度</span><span class="stat-value" id="affection-value">38%</span></div>
+            <div class="meter" role="progressbar" aria-label="亲密度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="38"><span class="meter-fill affection" id="affection-meter"></span></div>
+          </div>
+          <div>
+            <div class="stat-top"><span>🐟 饱饱度</span><span class="stat-value" id="fullness-value">54%</span></div>
+            <div class="meter" role="progressbar" aria-label="饱饱度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="54"><span class="meter-fill" id="fullness-meter"></span></div>
+          </div>
+          <div>
+            <div class="stat-top"><span>🌿 精力值</span><span class="stat-value" id="energy-value">76%</span></div>
+            <div class="meter" role="progressbar" aria-label="精力值" aria-valuemin="0" aria-valuemax="100" aria-valuenow="76"><span class="meter-fill energy" id="energy-meter"></span></div>
+          </div>
+        </div>
+        <p class="actions-label">想和花花做什么？</p>
+        <div class="actions" aria-label="互动方式">
+          <button class="action" id="pet" type="button"><span class="action-icon" aria-hidden="true">🫳</span><span class="action-name">摸摸头</span></button>
+          <button class="action" id="feed" type="button"><span class="action-icon" aria-hidden="true">🐟</span><span class="action-name">喂小鱼</span></button>
+          <button class="action" id="play" type="button"><span class="action-icon" aria-hidden="true">🪶</span><span class="action-name">逗猫玩</span></button>
+        </div>
+        <div class="note" id="note" role="status" aria-live="polite">花花正舒服地晒着太阳，想要一点陪伴。</div>
+        <div class="bond"><span>今天陪伴了 <strong id="count">0</strong> 次</span><button class="reset" id="reset" type="button">重新开始</button></div>
+      </section>
+    </div>
+    <footer class="footer">每一次温柔的互动，都是一份小小的喜欢 ♡</footer>
+  </main>
+  <script>
+    (() => {
+      const scene = document.querySelector("#scene");
+      const catButton = document.querySelector("#cat-button");
+      const mood = document.querySelector("#mood");
+      const note = document.querySelector("#note");
+      const count = document.querySelector("#count");
+      const state = { affection: 38, fullness: 54, energy: 76, interactions: 0 };
+      let moodTimer;
+      let catClickTimer;
+
+      function updateMeter(name) {
+        const value = state[name];
+        document.querySelector(`#${name}-value`).textContent = `${value}%`;
+        const meter = document.querySelector(`#${name}-meter`);
+        meter.style.width = `${value}%`;
+        meter.parentElement.setAttribute("aria-valuenow", String(value));
+      }
+
+      function refresh() {
+        updateMeter("affection");
+        updateMeter("fullness");
+        updateMeter("energy");
+        count.textContent = String(state.interactions);
+        document.querySelector("#feed").disabled = state.fullness >= 95;
+        document.querySelector("#play").disabled = state.energy < 15;
+      }
+
+      function respond({ line, feeling, message, animation, hearts = false }) {
+        state.interactions += 1;
+        mood.textContent = feeling;
+        note.textContent = message;
+        scene.classList.remove("is-petting", "is-eating", "is-playing");
+        void scene.offsetWidth;
+        scene.classList.add(animation);
+        if (hearts) {
+          for (let i = 0; i < 3; i += 1) {
+            const heart = document.createElement("span");
+            heart.className = "float-heart";
+            heart.setAttribute("aria-hidden", "true");
+            heart.textContent = i === 1 ? "💗" : "♡";
+            heart.style.setProperty("--drift", `${(i - 1) * 47}px`);
+            scene.append(heart);
+            heart.addEventListener("animationend", () => heart.remove(), { once: true });
+          }
+        }
+        refresh();
+        window.clearTimeout(moodTimer);
+        moodTimer = window.setTimeout(() => {
+          scene.classList.remove(animation);
+          mood.textContent = state.energy < 15 ? "有点困啦" : "陪在你身边";
+        }, 1900);
+      }
+
+      function pet() {
+        state.affection = Math.min(100, state.affection + 7);
+        state.energy = Math.min(100, state.energy + 1);
+        respond({
+          line: ["呼噜呼噜～再摸摸我的下巴嘛！", "你的手手好暖，我喜欢你～", "花花蹭蹭！今天的摸摸收到啦。"][state.interactions % 3],
+          feeling: "幸福呼噜",
+          message: "花花眯起眼睛蹭了蹭你的手，亲密度增加啦。",
+          animation: "is-petting",
+          hearts: true
+        });
+      }
+
+      document.querySelector("#pet").addEventListener("click", pet);
+      catButton.addEventListener("click", (event) => {
+        window.clearTimeout(catClickTimer);
+        if (event.detail > 1) return;
+        catClickTimer = window.setTimeout(pet, 280);
+      });
+      document.querySelector("#feed").addEventListener("click", () => {
+        if (state.fullness >= 95) return;
+        state.fullness = Math.min(100, state.fullness + 28);
+        state.energy = Math.min(100, state.energy + 7);
+        state.affection = Math.min(100, state.affection + 4);
+        respond({
+          line: "喵呜！小鱼鱼最好吃啦，谢谢你！",
+          feeling: "满足开饭",
+          message: "花花咔嚓咔嚓吃掉小鱼，饱饱度和精力都提升了。",
+          animation: "is-eating"
+        });
+      });
+      document.querySelector("#play").addEventListener("click", () => {
+        if (state.energy < 15) return;
+        state.energy = Math.max(0, state.energy - 17);
+        state.fullness = Math.max(0, state.fullness - 5);
+        state.affection = Math.min(100, state.affection + 9);
+        respond({
+          line: "抓到羽毛啦！再来一次、再来一次！",
+          feeling: "玩得开心",
+          message: "花花追着羽毛蹦来蹦去！开心增加了，不过消耗了一点精力。",
+          animation: "is-playing"
+        });
+      });
+      document.querySelector("#reset").addEventListener("click", () => {
+        state.affection = 38;
+        state.fullness = 54;
+        state.energy = 76;
+        state.interactions = 0;
+        window.clearTimeout(moodTimer);
+        scene.classList.remove("is-petting", "is-eating", "is-playing");
+        scene.querySelectorAll(".float-heart").forEach((heart) => heart.remove());
+        mood.textContent = "开心等你";
+        note.textContent = "花花正舒服地晒着太阳，想要一点陪伴。";
+        refresh();
+      });
+      refresh();
+    })();
+  </script>
+  <script>
+    (() => {
+      const target = document.querySelector("[data-dandan-character]");
+      const scene = document.querySelector("#scene");
+      if (!target || !scene) return;
+
+      let drag = null;
+      target.addEventListener("pointerdown", (event) => {
+        if (!event.isPrimary || event.button !== 0) return;
+        const rect = target.getBoundingClientRect();
+        const offset = {
+          x: Number.parseFloat(target.style.getPropertyValue("--drag-x")) || 0,
+          y: Number.parseFloat(target.style.getPropertyValue("--drag-y")) || 0
+        };
+        drag = {
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          offset,
+          baseLeft: rect.left - offset.x,
+          baseTop: rect.top - offset.y,
+          width: rect.width,
+          height: rect.height,
+          moved: false
+        };
+      });
+
+      window.addEventListener("pointermove", (event) => {
+        if (!drag || event.pointerId !== drag.pointerId) return;
+        const bounds = scene.getBoundingClientRect();
+        const x = Math.max(
+          bounds.left + 6 - drag.baseLeft,
+          Math.min(drag.offset.x + event.clientX - drag.startX, bounds.right - 6 - drag.width - drag.baseLeft)
+        );
+        const y = Math.max(
+          bounds.top + 6 - drag.baseTop,
+          Math.min(drag.offset.y + event.clientY - drag.startY, bounds.bottom - 6 - drag.height - drag.baseTop)
+        );
+        if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 4) {
+          drag.moved = true;
+          target.classList.add("is-dragging");
+        }
+        target.style.setProperty("--drag-x", `${x}px`);
+        target.style.setProperty("--drag-y", `${y}px`);
+      });
+
+      function finishDrag(event) {
+        if (!drag || event.pointerId !== drag.pointerId) return;
+        target.classList.remove("is-dragging");
+        drag = null;
+      }
+
+      window.addEventListener("pointerup", finishDrag);
+      window.addEventListener("pointercancel", finishDrag);
+    })();
+  </script>
+  <script src="flower-room.js"></script>
+  <script src="dandan-room.js"></script>
+  <script src="flower-room-picker.js"></script>
+</body>
+</html>

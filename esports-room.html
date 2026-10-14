@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111126">
+  <title>小易的电竞房</title>
+  <script src="room-shell-bridge.js"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Trebuchet MS", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --ink: #f2f1ff;
+      --muted: #b5b1d3;
+      --pink: #ff75d8;
+      --cyan: #71e7ff;
+      --panel: rgba(23, 24, 53, .88);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px 20px;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 13% 12%, #392a65 0, transparent 33rem),
+        radial-gradient(ellipse at 90% 78%, #25385e 0, transparent 34rem),
+        #111126;
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    a { color: inherit; }
+    button { color: inherit; font: inherit; }
+    .app { width: min(100%, 1050px); margin: 0 auto; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 24px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 800; text-decoration: none; }
+    .brand-mark { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid #51446e; border-radius: 13px; color: var(--cyan); background: #211c3d; box-shadow: 0 0 18px #b457ff20; font-size: 20px; }
+    .room-nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px 14px; }
+    .room-nav a { color: #c9c5e7; font-size: 13px; text-decoration: none; }
+    .room-nav a:hover { color: var(--cyan); }
+    .intro { margin-bottom: 18px; }
+    .eyebrow { margin: 0 0 5px; color: var(--cyan); font-size: 12px; font-weight: 750; letter-spacing: .13em; }
+    h1 { margin: 0; font-size: clamp(29px, 5vw, 42px); letter-spacing: -.045em; line-height: 1.2; }
+    h1 span { color: var(--pink); }
+    .intro-copy { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+    .presence { min-height: 1.5em; color: var(--cyan); font-size: 13px; }
+    .game-room {
+      position: relative;
+      display: flex;
+      min-height: min(69vh, 660px);
+      min-height: clamp(470px, 69vh, 660px);
+      align-items: flex-end;
+      justify-content: center;
+      overflow: hidden;
+      isolation: isolate;
+      border: 1px solid #4a4772;
+      border-radius: 24px;
+      background:
+        radial-gradient(ellipse at 50% 56%, #5d427366 0, transparent 39%),
+        linear-gradient(180deg, #1b1a39 0%, #22213f 68%, #292341 100%);
+      box-shadow: 0 18px 55px #07071070, inset 0 0 60px #7b6bff12;
+    }
+    .game-room {
+      display: block;
+      min-height: 0;
+      aspect-ratio: 1999 / 1037;
+      background: #24203b;
+    }
+    .game-room > :not(.room-backdrop):not(.character-name):not(.room-cat):not(.xiaoyi-visitor):not([data-dandan-visitor]):not([data-dandan-invitation]):not([data-dandan-reaction]) { display: none; }
+    .room-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .xiaoyi-visitor {
+      position: absolute;
+      z-index: 1;
+      top: 17%;
+      left: 35%;
+      width: 34%;
+      height: 83%;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .xiaoyi-visitor[hidden] { display: none !important; }
+    .xiaoyi-visitor:focus-visible { border-radius: 40%; outline: 3px solid var(--cyan); outline-offset: 3px; }
+    .character-name {
+      position: absolute;
+      z-index: 1;
+      top: 16px;
+      left: 16px;
+      padding: 7px 13px;
+      border: 1px solid #ffffff75;
+      border-radius: 999px;
+      color: white;
+      background: #19182bd9;
+      box-shadow: 0 3px 16px #10101a4d;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .dandan-reaction {
+      position: absolute;
+      z-index: 3;
+      right: 16px;
+      bottom: 0;
+      left: 16px;
+      width: max-content;
+      max-width: calc(100% - 32px);
+      margin: 0 auto;
+      padding: 10px 13px;
+      border: 1px solid #ff9fda;
+      border-radius: 14px;
+      color: #fff5fb;
+      background: #291a32f2;
+      box-shadow: 0 0 20px #ff75d834, 0 5px 18px #08081475;
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
+    }
+    .dandan-reaction.is-xiaoyi {
+      border-color: #71e7ff;
+      box-shadow: 0 0 20px #71e7ff38, 0 5px 18px #08081475;
+    }
+    .dandan-reaction::after {
+      position: absolute;
+      top: -7px;
+      left: 50%;
+      width: 12px;
+      height: 12px;
+      border-right: 1px solid #ff9fda;
+      border-top: 1px solid #ff9fda;
+      background: #291a32f2;
+      content: "";
+      transform: translateX(-50%) rotate(-45deg);
+    }
+    .dandan-reaction.is-xiaoyi::after {
+      border-color: #71e7ff;
+    }
+    .dandan-reaction[hidden] { display: none !important; }
+    .dandan-invitation {
+      position: absolute;
+      z-index: 4;
+      right: 16px;
+      bottom: 16px;
+      left: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      width: max-content;
+      max-width: calc(100% - 32px);
+      margin: 0 auto;
+      padding: 10px 14px;
+      border: 1px solid #ff9fda;
+      border-radius: 14px;
+      color: #fff5fb;
+      background: #291a32f2;
+      box-shadow: 0 0 24px #ff75d834, 0 7px 22px #08081480;
+    }
+    .dandan-invitation[hidden] { display: none !important; }
+    .dandan-invitation p { margin: 0; font-size: 13px; font-weight: 700; }
+    .invitation-actions { display: flex; justify-content: center; gap: 8px; }
+    .invitation-actions button {
+      min-height: 34px;
+      padding: 6px 11px;
+      border: 1px solid #ff9fda;
+      border-radius: 999px;
+      color: #fff5fb;
+      background: #523055;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .invitation-actions button:first-child { color: #21172a; background: #ffb8e2; }
+    .invitation-actions button:hover { filter: brightness(1.12); }
+    .invitation-actions button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+    .dandan-visitor {
+      position: absolute;
+      z-index: 2;
+      bottom: 0;
+      right: 2%;
+      display: block;
+      width: min(18%, 160px);
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      filter: drop-shadow(0 7px 8px #07071165);
+      animation: dandan-arrive .35s ease-out both;
+    }
+    .dandan-visitor[hidden] { display: none !important; }
+    .dandan-visitor.is-with-flower { right: 2%; bottom: 1%; left: auto; width: min(24%, 240px); }
+    .dandan-visitor img,
+    .dandan-visitor svg { display: block; width: 100%; height: auto; }
+    .dandan-visitor:not(.is-with-flower) [data-dandan-default-art],
+    .dandan-visitor:not(.is-with-flower) [data-dandan-together-art]:not(.is-hidden) { transform: scale(1.7); transform-origin: 100% 100%; }
+    .dandan-visitor .is-hidden { display: none !important; }
+    .dandan-visitor-label {
+      position: absolute;
+      top: 4%;
+      left: 50%;
+      width: max-content;
+      padding: 5px 9px;
+      border: 1px solid #ffb5df;
+      border-radius: 999px;
+      color: #fff5fb;
+      background: #492344e8;
+      box-shadow: 0 0 14px #ff75d84a;
+      font-size: clamp(10px, 1.4vw, 12px);
+      font-weight: 700;
+      transform: translate(-50%, -100%);
+    }
+    @keyframes dandan-arrive {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .game-room::before {
+      position: absolute;
+      z-index: -1;
+      inset: 0;
+      background-image: linear-gradient(#aaa7ff0b 1px, transparent 1px), linear-gradient(90deg, #aaa7ff0b 1px, transparent 1px);
+      background-size: 38px 38px;
+      content: "";
+      mask-image: linear-gradient(transparent, #000 38%, #000);
+    }
+    .neon { position: absolute; top: 22px; right: 28px; width: 110px; height: 42px; border: 1px solid #ff75d870; border-radius: 12px 12px 5px 5px; background: #ff75d810; box-shadow: 0 0 24px #ff75d839, inset 0 0 16px #ff75d817; transform: skewY(-4deg); }
+    .neon::before { position: absolute; inset: 0; display: grid; place-items: center; color: #ffa8e8; content: "GAME ON"; font-size: 12px; font-weight: 800; letter-spacing: .19em; text-shadow: 0 0 12px #ff75d8; }
+    .monitor {
+      position: absolute;
+      right: 13%;
+      bottom: 30%;
+      width: min(35%, 230px);
+      aspect-ratio: 1.35;
+      border: 7px solid #29283d;
+      border-radius: 15px;
+      background: linear-gradient(145deg, #182644, #392461 56%, #173950);
+      box-shadow: 0 0 0 1px #8f88bd, 0 0 30px #53d7ff45;
+    }
+    .monitor::before { position: absolute; right: 13%; bottom: 13%; left: 13%; height: 1px; background: linear-gradient(90deg, transparent, var(--cyan), var(--pink), transparent); content: ""; box-shadow: 0 0 13px var(--cyan); }
+    .monitor::after { position: absolute; top: 100%; left: 48%; width: 9px; height: 33px; background: #48445e; content: ""; }
+    .monitor-stand { position: absolute; right: 15%; bottom: calc(30% - 39px); width: min(32%, 205px); height: 10px; border-radius: 0 0 12px 12px; background: #45405c; }
+    .desk { position: absolute; right: 0; bottom: 21%; left: 0; height: 22px; border-top: 3px solid #8c7fad; background: linear-gradient(90deg, #302b48, #544263 48%, #302b48); box-shadow: 0 10px 0 #17172a, 0 0 20px #df65fc35; }
+    .desk::after { position: absolute; top: 100%; right: 12%; left: 12%; height: 42px; border-right: 8px solid #242239; border-left: 8px solid #242239; content: ""; }
+    .tower { position: absolute; right: 6%; bottom: 23%; width: 76px; height: 148px; border: 2px solid #504a70; border-radius: 12px; background: linear-gradient(135deg, #22223d, #171728); box-shadow: inset 0 0 19px #9f4de71f; }
+    .tower::before { position: absolute; top: 14px; left: 50%; width: 42px; height: 42px; border: 2px solid #72e6ff91; border-radius: 50%; box-shadow: 0 0 15px #72e6ff90, inset 0 0 14px #72e6ff47; content: ""; transform: translateX(-50%); }
+    .tower::after { position: absolute; top: 74px; left: 50%; width: 42px; height: 42px; border: 2px solid #ff75d88a; border-radius: 50%; box-shadow: 0 0 15px #ff75d890, inset 0 0 14px #ff75d847; content: ""; transform: translateX(-50%); }
+    .keyboard { position: absolute; z-index: 1; right: 24%; bottom: 25%; width: 133px; height: 13px; border: 1px solid #8d78b4; border-radius: 4px; background: repeating-linear-gradient(90deg, #68eaff 0 7px, #282641 7px 10px, #ff70dd 10px 15px, #282641 15px 18px); box-shadow: 0 0 17px #9a6aff78; transform: skewX(-22deg); }
+    .cup { position: absolute; z-index: 1; right: 8%; bottom: 25%; width: 29px; height: 35px; border: 2px solid #a292bd; border-radius: 4px 4px 9px 9px; background: linear-gradient(90deg, #29314e, #3b3450); box-shadow: 0 0 11px #73e8ff4f; }
+    .cup::after { position: absolute; top: 5px; right: -10px; width: 9px; height: 13px; border: 2px solid #a292bd; border-left: 0; border-radius: 0 9px 9px 0; content: ""; }
+    .room-cat {
+      position: absolute;
+      z-index: 2;
+      display: block;
+      right: 6%;
+      bottom: 3%;
+      width: min(15%, 120px);
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .room-cat[hidden] { display: none !important; }
+    .room-cat:focus-visible { border-radius: 20px; outline: 2px dashed var(--cyan); outline-offset: 4px; }
+    .room-cat img { display: block; width: 100%; height: auto; filter: drop-shadow(0 10px 12px #07071180); }
+    .status-card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding: 15px 18px; border: 1px solid #403d63; border-radius: 16px; background: var(--panel); }
+    .status-copy { margin: 0; color: var(--muted); font-size: 13px; }
+    .status-copy strong { color: var(--ink); }
+    .room-nav-bottom { display: flex; flex-wrap: wrap; gap: 9px; }
+    .room-nav-bottom a { padding: 7px 11px; border: 1px solid #555078; border-radius: 999px; color: #e3dffb; background: #292744; font-size: 12px; text-decoration: none; }
+    .room-nav-bottom a:hover { border-color: var(--cyan); color: var(--cyan); }
+    .snake-game {
+      margin-top: 22px;
+      padding: clamp(16px, 3vw, 26px);
+      border: 1px solid #48446f;
+      border-radius: 22px;
+      background: linear-gradient(145deg, #1d1c38, #151529);
+      box-shadow: 0 16px 44px #08081455, inset 0 1px #ffffff0b;
+    }
+    .game-heading { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .game-kicker { margin: 0 0 4px; color: var(--cyan); font-size: 11px; font-weight: 750; letter-spacing: .15em; }
+    .game-heading h2 { margin: 0; font-size: clamp(21px, 4vw, 28px); letter-spacing: -.035em; }
+    .game-help { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+    .game-stats { display: flex; gap: 9px; }
+    .game-stat { min-width: 82px; padding: 8px 12px; border: 1px solid #454166; border-radius: 12px; background: #24223f; text-align: center; }
+    .game-stat span { display: block; color: var(--muted); font-size: 11px; }
+    .game-stat strong { color: var(--cyan); font-size: 20px; line-height: 1.2; }
+    .game-board-wrap { position: relative; overflow: hidden; border: 1px solid #444267; border-radius: 16px; background: #0d1020; box-shadow: inset 0 0 32px #080a15; }
+    #snake-canvas { display: block; width: 100%; height: auto; aspect-ratio: 5 / 3; touch-action: none; }
+    .game-overlay { position: absolute; inset: 0; display: grid; place-items: center; padding: 18px; background: #0b0c19bc; text-align: center; backdrop-filter: blur(3px); }
+    .game-overlay[hidden] { display: none; }
+    .overlay-card { max-width: 330px; }
+    .overlay-card h3 { margin: 0 0 7px; font-size: clamp(20px, 4vw, 27px); }
+    .overlay-card p { margin: 0 0 15px; color: #c4c2dc; font-size: 13px; }
+    .game-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 9px; margin-top: 14px; }
+    .game-button { min-height: 40px; padding: 8px 17px; border: 1px solid #5b5685; border-radius: 11px; color: #efedff; background: #292743; cursor: pointer; font-size: 13px; font-weight: 700; transition: border-color .16s ease, transform .16s ease, background .16s ease; }
+    .game-button:hover:not(:disabled) { border-color: var(--cyan); background: #30304d; transform: translateY(-1px); }
+    .game-button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+    .game-button:disabled { cursor: not-allowed; opacity: .48; }
+    .game-button.primary { border-color: #62d5ed; color: #101522; background: linear-gradient(110deg, #77eaff, #a3f6ec); }
+    .game-button.primary:hover:not(:disabled) { background: #a2f3ff; }
+    .game-status { min-height: 1.5em; margin: 12px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
+    @media (max-width: 600px) {
+      body { padding: 18px 12px; }
+      .topbar { align-items: flex-start; }
+      .room-nav { gap: 8px; }
+      .room-nav a { font-size: 12px; }
+      .game-room { min-height: 480px; }
+      .game-room { min-height: 0; aspect-ratio: 1 / 1; }
+      .room-backdrop { object-position: 50% 44%; }
+      .xiaoyi-visitor { top: 14%; left: 22%; width: 56%; height: 86%; }
+      .character-name { top: 10px; left: 10px; padding: 6px 10px; font-size: 12px; }
+      .dandan-reaction { right: 8px; bottom: 0; left: 8px; max-width: calc(100% - 16px); padding: 8px 10px; font-size: 12px; }
+      .dandan-invitation { right: 8px; bottom: 8px; left: 8px; gap: 8px; width: max-content; max-width: calc(100% - 16px); padding: 8px; }
+      .dandan-invitation p { font-size: 11px; }
+      .invitation-actions { gap: 5px; }
+      .invitation-actions button { min-height: 32px; padding: 5px 8px; font-size: 11px; white-space: nowrap; }
+      .dandan-visitor { right: 2%; left: auto; width: min(25%, 120px); }
+      .dandan-visitor.is-with-flower { right: 2%; bottom: 1%; left: auto; width: min(27%, 138px); }
+      .monitor { right: 12%; bottom: 34%; width: 39%; }
+      .monitor-stand { right: 14%; bottom: calc(34% - 39px); width: 36%; }
+      .desk { bottom: 25%; }
+      .tower { right: 4%; bottom: 27%; transform: scale(.8); transform-origin: bottom right; }
+      .keyboard { right: 30%; bottom: 29%; width: 92px; }
+      .cup { right: 9%; bottom: 29%; }
+      .room-cat { right: 4%; bottom: 3%; width: min(26%, 96px); margin: 0; }
+      .snake-game { margin-top: 16px; padding: 15px; border-radius: 17px; }
+      .game-heading { align-items: flex-start; }
+      .game-heading > div:first-child { flex-basis: 100%; }
+      .game-stat { min-width: 74px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body data-flower-room="esports" data-xiaoyi-room="esports" data-dandan-room="esports">
+  <main class="app">
+    <header class="topbar">
+      <a class="brand" href="esports-room.html"><span class="brand-mark" aria-hidden="true">🎮</span> 小易的电竞房</a>
+      <nav class="room-nav" aria-label="切换房间">
+        <a href="cloud-notes.html">客厅</a>
+        <a href="cat.html">花花的小窝</a>
+        <a href="bedroom.html">卧室</a>
+      </nav>
+    </header>
+
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow" data-xiaoyi-presence>PLAYER ONE · 小易已上线</p>
+      <h1 id="page-title">小易的<span>电竞房</span></h1>
+      <p class="intro-copy">小易每15分钟在客厅与电竞房之间轮换，花花也会定时来陪伴。</p>
+      <p class="presence" data-flower-status role="status" aria-live="polite">正在确认花花的位置……</p>
+      <p class="presence" data-xiaoyi-status role="status" aria-live="polite">正在确认小易的位置……</p>
+      <p class="presence" data-dandan-status role="status" aria-live="polite">正在确认蛋蛋的位置……</p>
+    </section>
+
+    <section class="game-room" aria-label="电竞房场景">
+      <img class="room-backdrop" data-xiaoyi-backdrop src="xiaoyi-esports-room.webp" alt="小易在电竞房玩游戏">
+      <button class="xiaoyi-visitor" data-xiaoyi-character type="button" aria-label="小易，双击选择房间" title="双击选择房间" hidden></button>
+      <span class="character-name" data-xiaoyi-name>✨ 小易 · 游戏中</span>
+      <div class="dandan-visitor" data-dandan-visitor role="img" aria-label="蛋蛋随机来电竞房玩耍">
+        <span class="dandan-visitor-label" data-dandan-label>✨ 蛋蛋来玩啦</span>
+        <img data-dandan-default-art src="dandan-friendly.webp" alt="蛋蛋在电竞房玩耍的形象" draggable="false">
+        <img class="is-hidden" data-dandan-together-art data-xiaoyi-src="dandan-esports-pair.webp" src="dandan-huahua-floral.webp?v=1" alt="穿白色刺绣中式礼服的蛋蛋抱着花花，一起在电竞房休息" draggable="false">
+      </div>
+      <div class="dandan-reaction" data-dandan-reaction role="status" aria-live="polite" hidden>哼，小易就知道玩游戏！蛋蛋都邀请你了，还不肯陪我去客厅！</div>
+      <section class="dandan-invitation" data-dandan-invitation aria-labelledby="dandan-invitation-text" role="group" hidden>
+        <p id="dandan-invitation-text">蛋蛋：小易，我们一起去客厅吧！</p>
+        <div class="invitation-actions">
+          <button type="button" data-invitation-accept>嗯，好</button>
+          <button type="button" data-invitation-decline>我再玩会</button>
+        </div>
+      </section>
+      <div class="neon" aria-hidden="true"></div>
+      <div class="monitor" aria-hidden="true"></div>
+      <div class="monitor-stand" aria-hidden="true"></div>
+      <div class="desk" aria-hidden="true"></div>
+      <div class="tower" aria-hidden="true"></div>
+      <div class="keyboard" aria-hidden="true"></div>
+      <div class="cup" aria-hidden="true"></div>
+      <button class="room-cat" data-flower type="button" aria-label="摸摸来电竞房玩耍的花花" hidden>
+        <img src="huahua.webp" alt="花花，一只奶油白、橘色和深棕色相间的长毛三花猫" draggable="false">
+      </button>
+    </section>
+
+    <section class="snake-game" aria-labelledby="snake-title">
+      <div class="game-heading">
+        <div>
+          <p class="game-kicker">ARCADE · PLAYER ONE</p>
+          <h2 id="snake-title">霓虹贪吃蛇</h2>
+          <p class="game-help">在棋盘上滑动或使用方向键 / WASD 移动 · 空格键暂停 · 吃到食物后速度会提升</p>
+        </div>
+        <div class="game-stats" aria-label="游戏分数">
+          <div class="game-stat"><span>本局得分</span><strong id="snake-score">0</strong></div>
+          <div class="game-stat"><span>最高纪录</span><strong id="snake-best">0</strong></div>
+        </div>
+      </div>
+      <div class="game-board-wrap">
+        <canvas id="snake-canvas" width="600" height="360" tabindex="0" role="img" aria-label="贪吃蛇游戏棋盘，在棋盘上滑动、按方向键或 WASD 开始"></canvas>
+        <div class="game-overlay" id="snake-overlay">
+          <div class="overlay-card">
+            <h3 id="snake-overlay-title">准备好开一局了吗？</h3>
+            <p id="snake-overlay-copy">吃掉发光的能量点，不要撞到墙或自己的身体。</p>
+            <button class="game-button primary" id="snake-start" type="button">开始游戏</button>
+          </div>
+        </div>
+      </div>
+      <div class="game-actions">
+        <button class="game-button" id="snake-pause" type="button" disabled>暂停</button>
+        <button class="game-button" id="snake-restart" type="button">重新开始</button>
+      </div>
+      <p class="game-status" id="snake-status" role="status" aria-live="polite">点击开始游戏，在棋盘上滑动或使用方向键开始。</p>
+    </section>
+
+    <section class="status-card">
+      <p class="status-copy"><strong>小易的游戏搭档</strong> · 花花来玩时，点点她给她加油打气！</p>
+      <nav class="room-nav-bottom" aria-label="其他房间">
+        <a href="cloud-notes.html">☁️ 客厅</a>
+        <a href="cat.html">🐾 花花的小窝</a>
+        <a href="bedroom.html">🛏️ 卧室</a>
+      </nav>
+    </section>
+  </main>
+  <script>
+    (() => {
+      const canvas = document.querySelector("#snake-canvas");
+      const context = canvas.getContext("2d");
+      const columns = 30;
+      const rows = 18;
+      const cellSize = 20;
+      const bestKey = "xiaoyi-esports-snake-best";
+      const scoreDisplay = document.querySelector("#snake-score");
+      const bestDisplay = document.querySelector("#snake-best");
+      const overlay = document.querySelector("#snake-overlay");
+      const overlayTitle = document.querySelector("#snake-overlay-title");
+      const overlayCopy = document.querySelector("#snake-overlay-copy");
+      const startButton = document.querySelector("#snake-start");
+      const pauseButton = document.querySelector("#snake-pause");
+      const restartButton = document.querySelector("#snake-restart");
+      const status = document.querySelector("#snake-status");
+      const directions = {
+        ArrowUp: { x: 0, y: -1 },
+        w: { x: 0, y: -1 },
+        ArrowDown: { x: 0, y: 1 },
+        s: { x: 0, y: 1 },
+        ArrowLeft: { x: -1, y: 0 },
+        a: { x: -1, y: 0 },
+        ArrowRight: { x: 1, y: 0 },
+        d: { x: 1, y: 0 }
+      };
+      let snake = [];
+      let food = { x: 0, y: 0 };
+      let direction = { x: 1, y: 0 };
+      let nextDirection = direction;
+      let score = 0;
+      let best = Number(localStorage.getItem(bestKey)) || 0;
+      let state = "ready";
+      let timer;
+      let touchStart;
+
+      bestDisplay.textContent = String(best);
+
+      function draw() {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = "#0e1120";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        context.strokeStyle = "rgba(136, 161, 205, .10)";
+        context.lineWidth = 1;
+        for (let x = 0; x <= columns; x++) {
+          context.beginPath();
+          context.moveTo(x * cellSize + 0.5, 0);
+          context.lineTo(x * cellSize + 0.5, canvas.height);
+          context.stroke();
+        }
+        for (let y = 0; y <= rows; y++) {
+          context.beginPath();
+          context.moveTo(0, y * cellSize + 0.5);
+          context.lineTo(canvas.width, y * cellSize + 0.5);
+          context.stroke();
+        }
+
+        const foodX = food.x * cellSize + cellSize / 2;
+        const foodY = food.y * cellSize + cellSize / 2;
+        context.save();
+        context.shadowColor = "#ff6bd6";
+        context.shadowBlur = 15;
+        context.fillStyle = "#ff78d8";
+        context.beginPath();
+        context.arc(foodX, foodY, cellSize * 0.34, 0, Math.PI * 2);
+        context.fill();
+        context.restore();
+
+        snake.forEach((segment, index) => {
+          const inset = index === 0 ? 2 : 3;
+          const x = segment.x * cellSize + inset;
+          const y = segment.y * cellSize + inset;
+          const size = cellSize - inset * 2;
+          context.save();
+          context.fillStyle = index === 0 ? "#a2f5ec" : `hsl(${166 + Math.min(index * 2, 35)} 78% ${59 - Math.min(index, 12)}%)`;
+          context.shadowColor = index === 0 ? "#71e7ff" : "#55e5c1";
+          context.shadowBlur = index === 0 ? 13 : 5;
+          context.beginPath();
+          context.roundRect(x, y, size, size, 5);
+          context.fill();
+          context.restore();
+        });
+
+        if (snake.length) {
+          const head = snake[0];
+          const eyeOffsetX = direction.x === 0 ? 5 : (direction.x > 0 ? 12 : 5);
+          const eyeOffsetY = direction.y === 0 ? 5 : (direction.y > 0 ? 12 : 5);
+          context.fillStyle = "#102033";
+          context.beginPath();
+          context.arc(head.x * cellSize + eyeOffsetX, head.y * cellSize + eyeOffsetY, 1.8, 0, Math.PI * 2);
+          context.arc(head.x * cellSize + eyeOffsetX + (direction.y === 0 ? 0 : 7), head.y * cellSize + eyeOffsetY + (direction.x === 0 ? 0 : 7), 1.8, 0, Math.PI * 2);
+          context.fill();
+        }
+      }
+
+      function placeFood() {
+        const openCells = [];
+        for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < columns; x++) {
+            if (!snake.some((segment) => segment.x === x && segment.y === y)) {
+              openCells.push({ x, y });
+            }
+          }
+        }
+        if (openCells.length === 0) {
+          finishGame("win");
+          return;
+        }
+        food = openCells[Math.floor(Math.random() * openCells.length)];
+      }
+
+      function resetGame() {
+        window.clearTimeout(timer);
+        snake = [
+          { x: 9, y: 9 },
+          { x: 8, y: 9 },
+          { x: 7, y: 9 }
+        ];
+        direction = { x: 1, y: 0 };
+        nextDirection = direction;
+        score = 0;
+        scoreDisplay.textContent = "0";
+        state = "running";
+        overlay.hidden = true;
+        pauseButton.disabled = false;
+        pauseButton.textContent = "暂停";
+        status.textContent = "游戏进行中，加油！";
+        placeFood();
+        draw();
+        scheduleNextMove();
+        canvas.focus({ preventScroll: true });
+      }
+
+      function scheduleNextMove() {
+        window.clearTimeout(timer);
+        if (state === "running") {
+          timer = window.setTimeout(moveSnake, Math.max(65, 155 - score * 2));
+        }
+      }
+
+      function moveSnake() {
+        if (state !== "running") return;
+        direction = nextDirection;
+        const head = snake[0];
+        const next = { x: head.x + direction.x, y: head.y + direction.y };
+        const ateFood = next.x === food.x && next.y === food.y;
+        const collisionBody = ateFood ? snake : snake.slice(0, -1);
+        if (
+          next.x < 0 || next.x >= columns ||
+          next.y < 0 || next.y >= rows ||
+          collisionBody.some((segment) => segment.x === next.x && segment.y === next.y)
+        ) {
+          finishGame("over");
+          return;
+        }
+
+        snake.unshift(next);
+        if (ateFood) {
+          score += 10;
+          scoreDisplay.textContent = String(score);
+          if (score > best) {
+            best = score;
+            bestDisplay.textContent = String(best);
+            localStorage.setItem(bestKey, String(best));
+          }
+          placeFood();
+        } else {
+          snake.pop();
+        }
+        draw();
+        scheduleNextMove();
+      }
+
+      function finishGame(result) {
+        window.clearTimeout(timer);
+        state = result;
+        pauseButton.disabled = true;
+        overlay.hidden = false;
+        if (result === "win") {
+          overlayTitle.textContent = "太厉害了，棋盘都被你占满啦！";
+          overlayCopy.textContent = `最终得分：${score} 分。再来一局挑战新纪录吧！`;
+          status.textContent = "恭喜通关！";
+        } else {
+          overlayTitle.textContent = "游戏结束";
+          overlayCopy.textContent = `本局得分：${score} 分。调整好方向，再挑战一次吧！`;
+          status.textContent = "撞到啦，点击重新开始再玩一局。";
+        }
+        startButton.textContent = "再玩一局";
+        startButton.focus({ preventScroll: true });
+        draw();
+      }
+
+      function setDirection(next) {
+        if (state === "ready" || state === "over" || state === "win") {
+          resetGame();
+        }
+        if (state !== "running") return;
+        if (next.x === -direction.x && next.y === -direction.y) return;
+        nextDirection = next;
+      }
+
+      function togglePause() {
+        if (state === "running") {
+          window.clearTimeout(timer);
+          state = "paused";
+          overlay.hidden = false;
+          overlayTitle.textContent = "暂停一下";
+          overlayCopy.textContent = `当前得分：${score} 分。准备好后继续游戏。`;
+          startButton.textContent = "继续游戏";
+          pauseButton.textContent = "继续";
+          status.textContent = "游戏已暂停。";
+        } else if (state === "paused") {
+          state = "running";
+          overlay.hidden = true;
+          pauseButton.textContent = "暂停";
+          status.textContent = "游戏继续，加油！";
+          scheduleNextMove();
+          canvas.focus({ preventScroll: true });
+        }
+      }
+
+      startButton.addEventListener("click", () => {
+        if (state === "paused") {
+          togglePause();
+        } else {
+          resetGame();
+        }
+      });
+      restartButton.addEventListener("click", resetGame);
+      pauseButton.addEventListener("click", togglePause);
+
+      window.addEventListener("keydown", (event) => {
+        const next = directions[event.key] || directions[event.key.toLowerCase()];
+        if (next && (state === "running" || document.activeElement === canvas)) {
+          event.preventDefault();
+          setDirection(next);
+        } else if (event.code === "Space" && !event.repeat && (state === "running" || state === "paused")) {
+          event.preventDefault();
+          togglePause();
+        }
+      });
+
+      document.querySelectorAll("[data-direction]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const { direction: directionName } = button.dataset;
+          const directionKeys = { up: "ArrowUp", down: "ArrowDown", left: "ArrowLeft", right: "ArrowRight" };
+          setDirection(directions[directionKeys[directionName]]);
+        });
+      });
+
+      canvas.addEventListener("pointerdown", (event) => {
+        touchStart = { x: event.clientX, y: event.clientY };
+      });
+      canvas.addEventListener("pointerup", (event) => {
+        if (!touchStart) return;
+        const deltaX = event.clientX - touchStart.x;
+        const deltaY = event.clientY - touchStart.y;
+        touchStart = null;
+        if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 20) return;
+        const key = Math.abs(deltaX) > Math.abs(deltaY)
+          ? (deltaX > 0 ? "ArrowRight" : "ArrowLeft")
+          : (deltaY > 0 ? "ArrowDown" : "ArrowUp");
+        setDirection(directions[key]);
+      });
+      canvas.addEventListener("pointercancel", () => {
+        touchStart = null;
+      });
+
+      snake = [{ x: 9, y: 9 }, { x: 8, y: 9 }, { x: 7, y: 9 }];
+      placeFood();
+      draw();
+    })();
+  </script>
+  <script src="flower-room.js"></script>
+  <script src="xiaoyi-room.js"></script>
+  <script src="dandan-room.js"></script>
+  <script src="flower-room-picker.js"></script>
+</body>
+</html>

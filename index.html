@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff8f1">
+  <title>温暖小屋</title>
+  <style>
+    html, body, main { width: 100%; height: 100%; margin: 0; }
+    body { overflow: hidden; background: #fff8f1; }
+    iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #fff8f1;
+    }
+    iframe[hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <main aria-label="温暖小屋">
+    <iframe id="bedroom-scene" title="卧室音乐播放器" allow="autoplay"></iframe>
+    <iframe id="active-scene" title="温暖小屋房间" allow="autoplay"></iframe>
+  </main>
+  <script>
+    (() => {
+      const scenes = {
+        living: { file: "cloud-notes.html", title: "客厅 · 和蛋蛋聊天" },
+        cat: { file: "cat.html", title: "花花的小窝 · 互动三花猫" },
+        bedroom: { file: "bedroom.html", title: "卧室 · 温暖的小屋" },
+        esports: { file: "esports-room.html", title: "小易的电竞房" }
+      };
+      const bedroomFrame = document.querySelector("#bedroom-scene");
+      const activeFrame = document.querySelector("#active-scene");
+
+      function showScene(scene, updateHistory) {
+        const selected = scenes[scene] ? scene : "living";
+        const isBedroom = selected === "bedroom";
+        bedroomFrame.hidden = !isBedroom;
+        activeFrame.hidden = isBedroom;
+        document.title = scenes[selected].title;
+
+        if (isBedroom) {
+          if (!bedroomFrame.src) bedroomFrame.src = "bedroom.html";
+        } else if (!activeFrame.src || !activeFrame.src.endsWith(`/${scenes[selected].file}`)) {
+          activeFrame.src = scenes[selected].file;
+        }
+
+        if (updateHistory) {
+          const url = new URL(window.location.href);
+          url.searchParams.set("scene", selected);
+          window.history.pushState({ scene: selected }, "", url);
+        }
+      }
+
+      window.addEventListener("message", (event) => {
+        if (event.source !== bedroomFrame.contentWindow && event.source !== activeFrame.contentWindow) return;
+        if (!event.data || event.data.type !== "room-shell:navigate") return;
+        showScene(event.data.scene, true);
+      });
+
+      window.addEventListener("popstate", () => {
+        showScene(new URLSearchParams(window.location.search).get("scene"), false);
+      });
+
+      showScene(new URLSearchParams(window.location.search).get("scene") || "living", false);
+    })();
+  </script>
+</body>
+</html>
